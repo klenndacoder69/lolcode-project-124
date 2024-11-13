@@ -6,10 +6,11 @@ Kervin Ralph Samson
 
 Section: ST1L
 '''
-
-
 import re
+from tkinter import Tk, filedialog
+
 # Define regex patterns for specific keywords/phrases
+
 regex_patterns = {
     r'^HAI$': 'Code Delimeter',
     r'^KTHXBYE$': 'Code Delimeter',
@@ -38,7 +39,7 @@ regex_patterns = {
     r'^DIFFRINT$' : 'Comparison Operation',
     r'^SMOOSH$' : 'String Operation',
     r'^MAEK$' : 'Typecasting',
-    r'^A$' : 'ASK MAAM/UNKNOWN',
+    r'^AN$' : 'ASK MAAM/UNKNOWN',
     r'^IS NOW A$' : 'Typecasting',
     r'^VISIBLE$' : 'Output Keyword',
     r'^O RLY\?$' : 'Conditional Statement',
@@ -63,29 +64,27 @@ regex_patterns = {
     r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
-    r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
-    r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
-    r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
     r'^-?\d*\.\d+$' : 'Literal',  # Fixed pattern for floating-point literals
     r'"[^"]*"|[^"\s]+' : 'Literal', # this was changed
     r'^(WIN|FAIL)$' : 'Literal',
     r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
+    r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
+    r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
+    r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier'
 }
+
 # Function to tokenize and match each token
 def tokenize_and_match(line):
+
     # Step 1: Handle quoted strings and preserve them as one token
     # This will match any quoted string and preserve it as a single token
-    quoted_string_pattern = r'"[^"]*"|#[^#]*#|[^"\s]+'
+    quoted_string_pattern = r'"[^"]*"|[^"\s]+'
     tokens = []
     
     # contains the multiword regexes (highest priority in checking)
     multiword_regexes = [regex[1:-1] for regex in regex_patterns.keys() if len(regex.split()) > 1]
-    # print(multiword_regexes)
-    # pattern = re.compile(multiword_regexes[0])
-    # check = pattern.findall("I HAS A HELLO")
-    # print(check)
-    
+
     # We match the string based on its priority list
     # Find all quoted strings and add them to the tokens list
     # Step 2.1: Find all multiword strings and add them to the tokens list
@@ -94,22 +93,17 @@ def tokenize_and_match(line):
     placeholder_counter = 1
 
     for regex in multiword_regexes:
+
         for match in re.finditer(regex, line):
+            
             placeholder = f"_multiword_{placeholder_counter}"
-            # tokens.append(match.group(0))
             line = line.replace(match.group(0), placeholder, 1)
             # add placeholder to dictionary
             placeholders[placeholder] = match.group(0)
             placeholder_counter += 1
-            # print("test: ", line)
 
     # # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
     for match in re.finditer(quoted_string_pattern, line):
-        # print("debug: ", match.group(0))
-        if(match.group(0).startswith('#') and match.group(0).endswith('#')):
-            slice_hashtag = slice(1,-1)
-            tokens.append(match.group(0)[slice_hashtag])
-            continue
         if(match.group(0).startswith('"') and match.group(0).endswith('"')):
             tokens.append("\"")
             tokens.append(match.group(0))
@@ -120,49 +114,64 @@ def tokenize_and_match(line):
             break
         tokens.append(match.group(0))
     
-    # print(tokens)
-    # return
+
     # Step 3: Match each token with the regex patterns
+    # matched_tokens contain the substituted multiwords
     matched_tokens = []
+
+    # this for loop iterates over each token with a quotation mark which indicates a string literal
     for token in tokens:
+        # bool flag to check if a match is found
         matched = False
         for pattern, category in regex_patterns.items(): # pattern = key , category = value
             if re.fullmatch(pattern, token): # dapat exact 
+
                 # if category is a string literal, then we remove its quotes and print
                 if category == "Literal" and token.startswith('"') and token.endswith('"'):
                     x = slice(1,-1)
+
                     matched_tokens.append(f"Lexeme: {token[x]} -> Classification: {category}")
                     matched = True
                     break
 
+                # if it is not a string literal, it immediately appends
                 matched_tokens.append(f"Lexeme: {token} -> Classification: {category}")
                 matched = True
                 break  # Stop checking once a match is found
+
         if not matched:
             matched_tokens.append(f"No match for: {token}")
 
-    # restore original multiword phrases ny finding placeholders then classifying hahahahahehehehihihi
+    # replace the multiwords with its original names (which is indicated by the placeholders dictionary)
+    # this indicates that the statements after a function category is a function identifier
+    next_token_is_fnc_id = False
     final_tokens = []
+
     for matched_token in matched_tokens:
-        if '_multiword_' in matched_token:
+        if next_token_is_fnc_id:
+            final_tokens.append(f"Lexeme: {matched_token.split(":")[1]} : Function Identifier")
+            next_token_is_fnc_id = False
+            continue
+        if 'multiword' in matched_token:
             # extract placeholder
-            placeholder = matched_token.split(":")[1].strip() #boom
+            placeholder = matched_token.split(":")[1].strip() # ['Lexeme', ' _multiword_1 -> Classification', ' Arithmetic Operation']
             placeholder = placeholder.split()[0] # get placeholder (_multiword_1)
 
-            if placeholder in placeholders:
+            if placeholder in placeholders: # check if inside then assign it to orig_phrase
                 orig_phrase = placeholders[placeholder]
 
-                # match original phrase and classify this shit
-                for pattern, category in regex_patterns.items():
-                    if re.fullmatch(pattern, orig_phrase):
+                # match original phrase and classify 
+                for pattern, category in regex_patterns.items(): # loop through all regexes
+                    if re.fullmatch(pattern, orig_phrase): # check if there is a match between the regex and the original phrase
+                        if category == "Function Call" or category == "Function Statement":
+                            next_token_is_fnc_id = True
                         final_tokens.append(f"Lexeme: {orig_phrase} -> Classification : {category}")
                         break
-            else: # pag di nahanap
+            else: # if placeholder was not found
                 final_tokens.append(matched_token)
-        else: # pag di rin nahanap
-            final_tokens.append(matched_token)
 
-    # print final matched tokens PLSPSLSLSPSL
+
+    # print final matched tokens 
     for final_token in final_tokens:
         print(final_token)
 
@@ -170,14 +179,16 @@ def tokenize_and_match(line):
 def process_file(file_path):
     with open(file_path, 'r') as file:
         for line in file:
-            line = line.strip()  # Remove leading/trailing whitespace
-            if line:  # Only process non-empty lines
+            line = line.strip()
+            if line:
                 print(f"\nProcessing line: {line}")
                 tokenize_and_match(line)
 
-# Example usage with the file "read.txt"
-
 def main():
-    process_file("read.txt")
+    root = Tk()
+    root.withdraw()  # Hide the main window
+    file_path = filedialog.askopenfilename(filetypes=[("LOL Files", "*.lol")])
+    if file_path:
+        process_file(file_path)
 
 main()
