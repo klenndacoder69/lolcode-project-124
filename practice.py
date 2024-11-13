@@ -58,9 +58,23 @@ def tokenize_and_match(line):
     quoted_string_pattern = r'"[^"]*"|[^"\s]+'
     tokens = []
     
+    # contains the multiword regexes (highest priority in checking)
+    multiword_regexes = [regex[1:-1] for regex in regex_patterns.keys() if len(regex.split()) > 1]
+    print(multiword_regexes)
+    # pattern = re.compile(multiword_regexes[0])
+    # check = pattern.findall("I HAS A HELLO")
+    # print(check)
     
+    # We match the string based on its priority list
     # Find all quoted strings and add them to the tokens list
-    # Step 2: Split the remaining line by spaces, ensuring no quoted strings are split
+    # Step 2.1: Find all multiword strings and add them to the tokens list
+    for regex in multiword_regexes:
+        for match in re.finditer(regex, line):
+            print(match.group(0))
+            tokens.append(match.group(0))
+            line = line.replace(match.group(0), "")
+            print("TEST: ", line)
+    # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
     for match in re.finditer(quoted_string_pattern, line):
         # print(match.group(0))
         if(match.group(0).startswith('"') and match.group(0).endswith('"')):
