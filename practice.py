@@ -1,5 +1,14 @@
-import re
+'''
+Authors:
+Klenn Jakek Borja
+Shawn Clyde Diares
+Kervin Ralph Samson
 
+Section: ST1L
+'''
+
+
+import re
 # Define regex patterns for specific keywords/phrases
 regex_patterns = {
     r'^HAI$': 'Code Delimeter',
@@ -29,13 +38,15 @@ regex_patterns = {
     r'^DIFFRINT$' : 'Comparison Operation',
     r'^SMOOSH$' : 'String Operation',
     r'^MAEK$' : 'Typecasting',
+    r'^VISIBLE$' : 'Output Keyword',
+    r'\"': 'String Delimiter',
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
     r'^-?\d*\.\d+$' : 'Literal',  # Fixed pattern for floating-point literals
-    r'^"\s*[^"]*\s*"$' : 'Literal',
+    r'"[^"]*"|[^"\s]+' : 'Literal', # this was changed
     r'^(WIN|FAIL)$' : 'Literal',
     r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
 }
@@ -44,30 +55,34 @@ regex_patterns = {
 def tokenize_and_match(line):
     # Step 1: Handle quoted strings and preserve them as one token
     # This will match any quoted string and preserve it as a single token
-    quoted_string_pattern = r'"[^"]*"'
+    quoted_string_pattern = r'"[^"]*"|[^"\s]+'
     tokens = []
     
-
+    
     # Find all quoted strings and add them to the tokens list
-    for match in re.finditer(quoted_string_pattern, line): # returns an object where it match to access need yung capture
-        tokens.append(match.group(0)) # similar to capture in rust 0 = full match bali yung buong nasa loob ng quotation
-        print("laman",tokens) # yung enclosed lang sa " "
-        line = line.replace(match.group(0), '')  # Remove the quoted string from the line 
-        print("ito line",line)
-
     # Step 2: Split the remaining line by spaces, ensuring no quoted strings are split
-    line_tokens = line.split()
-    tokens.extend(line_tokens)
-    print("end",tokens)
+    for match in re.finditer(quoted_string_pattern, line):
+        # print(match.group(0))
+        if(match.group(0).startswith('"') and match.group(0).endswith('"')):
+            tokens.append("\"")
+            tokens.append(match.group(0))
+            tokens.append("\"")
+            continue
+        tokens.append(match.group(0))
 
-    # Debug: Print tokens before processing
-    # print(f"Tokens: {tokens}")
     
     # Step 3: Match each token with the regex patterns
     for token in tokens:
         matched = False
         for pattern, category in regex_patterns.items(): # pattern = key , category = value
             if re.fullmatch(pattern, token): # dapat exact 
+                # if category is a string literal, then we remove its quotes and print
+                if category == "Literal" and token.startswith('"') and token.endswith('"'):
+                    x = slice(1,-1)
+                    print(f"Lexeme: {token[x]} -> Classification: {category}")
+                    matched = True
+                    break
+
                 print(f"Lexeme: {token} -> Classification: {category}")
                 matched = True
                 break  # Stop checking once a match is found
@@ -84,4 +99,8 @@ def process_file(file_path):
                 tokenize_and_match(line)
 
 # Example usage with the file "read.txt"
-process_file('read.txt')
+
+def main():
+    process_file("read.txt")
+
+main()
