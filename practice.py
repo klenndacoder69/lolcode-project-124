@@ -60,7 +60,7 @@ def tokenize_and_match(line):
     
     # contains the multiword regexes (highest priority in checking)
     multiword_regexes = [regex[1:-1] for regex in regex_patterns.keys() if len(regex.split()) > 1]
-    print(multiword_regexes)
+    # print(multiword_regexes)
     # pattern = re.compile(multiword_regexes[0])
     # check = pattern.findall("I HAS A HELLO")
     # print(check)
@@ -68,11 +68,6 @@ def tokenize_and_match(line):
     # We match the string based on its priority list
     # Find all quoted strings and add them to the tokens list
     # Step 2.1: Find all multiword strings and add them to the tokens list
-    # we should have a loop that contains:
-        # 1. find all multiword strings and add them to token list then remove that part of string
-        # 2. check for variable
-        # 3.
-    # while line:
 
     for regex in multiword_regexes:
         for match in re.finditer(regex, line):
@@ -81,7 +76,7 @@ def tokenize_and_match(line):
             # print("test: ", line)
     # # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
     for match in re.finditer(quoted_string_pattern, line):
-        print("debug: ", match.group(0))
+        # print("debug: ", match.group(0))
         if(match.group(0).startswith('#') and match.group(0).endswith('#')):
             slice_hashtag = slice(1,-1)
             tokens.append(match.group(0)[slice_hashtag])
@@ -91,8 +86,11 @@ def tokenize_and_match(line):
             tokens.append(match.group(0))
             tokens.append("\"")
             continue
+        if(match.group(0) == "BTW" or match.group(0) == "OBTW" or match.group(0) == "TLDR"):
+            tokens.append(match.group(0))
+            break
         tokens.append(match.group(0))
-    print(tokens)
+    # print(tokens)
     # return
     # Step 3: Match each token with the regex patterns
     for token in tokens:
