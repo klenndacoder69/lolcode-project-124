@@ -16,7 +16,7 @@ regex_patterns = {
     r'^I HAS A$': 'Variable Declaration',  # This will match the full phrase "I HAS A"
     r'^WAZZUP$' : 'Declare Variables',
     r'^BUHBYE$' : 'Declare Variables',
-    r'^BTW$' : 'Comment',
+    r'^BTW$' : 'Single Line Comment',
     r'^OBTW$' : 'Multiple Line Comment',
     r'^TLDR$' : 'Multiple Line Comment',
     r'^ITZ$' : 'Variable Assignment',
@@ -38,7 +38,29 @@ regex_patterns = {
     r'^DIFFRINT$' : 'Comparison Operation',
     r'^SMOOSH$' : 'String Operation',
     r'^MAEK$' : 'Typecasting',
+    r'^A$' : 'ASK MAAM/UNKNOWN',
+    r'^IS NOW A$' : 'Typecasting',
     r'^VISIBLE$' : 'Output Keyword',
+    r'^O RLY\?$' : 'Conditional Statement',
+    r'^YA RLY$' : 'Conditional Statement',
+    r'^MEBBE$' : 'Conditional Statement',
+    r'^NO WAI$' : 'Conditional Statement',
+    r'^OIC$' : 'Conditional Statement',
+    r'^WTF\?$' : 'Case Statement',
+    r'^OMG$' : 'Case Statement',
+    r'^OMGWTF$' : 'Case Statement',
+    r'^IM IN YR$' : 'Loop Statement',
+    r'^UPPIN$' : 'Loop Statement',
+    r'^NERFIN$' : 'Loop Statement',
+    r'^YR$' : 'Loop Statement',
+    r'^TIL$' : 'Loop Statement',
+    r'^IM OUTTA YR$' : 'Loop Statement',
+    r'^HOW IZ I$' : 'Function Statement',
+    r'^IF U SAY SO$' : 'Function Statement',
+    r'^GTFO$' : 'Break/Return',
+    r'^FOUND YR$' : 'Return',
+    r'^I IZ$' : 'Function Call',
+    r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
@@ -50,7 +72,6 @@ regex_patterns = {
     r'^(WIN|FAIL)$' : 'Literal',
     r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
 }
-
 # Function to tokenize and match each token
 def tokenize_and_match(line):
     # Step 1: Handle quoted strings and preserve them as one token
@@ -69,11 +90,19 @@ def tokenize_and_match(line):
     # Find all quoted strings and add them to the tokens list
     # Step 2.1: Find all multiword strings and add them to the tokens list
 
+    placeholders = {}
+    placeholder_counter = 1
+
     for regex in multiword_regexes:
         for match in re.finditer(regex, line):
+            placeholder = f"_multiword_{placeholder_counter}"
             # tokens.append(match.group(0))
-            line = line.replace(match.group(0), f"#{match.group(0)}#", 1)
+            line = line.replace(match.group(0), placeholder, 1)
+            # add placeholder to dictionary
+            placeholders[placeholder] = match.group(0)
+            placeholder_counter += 1
             # print("test: ", line)
+
     # # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
     for match in re.finditer(quoted_string_pattern, line):
         # print("debug: ", match.group(0))
@@ -90,9 +119,11 @@ def tokenize_and_match(line):
             tokens.append(match.group(0))
             break
         tokens.append(match.group(0))
+    
     # print(tokens)
     # return
     # Step 3: Match each token with the regex patterns
+    matched_tokens = []
     for token in tokens:
         matched = False
         for pattern, category in regex_patterns.items(): # pattern = key , category = value
@@ -100,15 +131,40 @@ def tokenize_and_match(line):
                 # if category is a string literal, then we remove its quotes and print
                 if category == "Literal" and token.startswith('"') and token.endswith('"'):
                     x = slice(1,-1)
-                    print(f"Lexeme: {token[x]} -> Classification: {category}")
+                    matched_tokens.append(f"Lexeme: {token[x]} -> Classification: {category}")
                     matched = True
                     break
 
-                print(f"Lexeme: {token} -> Classification: {category}")
+                matched_tokens.append(f"Lexeme: {token} -> Classification: {category}")
                 matched = True
                 break  # Stop checking once a match is found
         if not matched:
-            print(f"No match for: {token}")
+            matched_tokens.append(f"No match for: {token}")
+
+    # restore original multiword phrases ny finding placeholders then classifying hahahahahehehehihihi
+    final_tokens = []
+    for matched_token in matched_tokens:
+        if '_multiword_' in matched_token:
+            # extract placeholder
+            placeholder = matched_token.split(":")[1].strip() #boom
+            placeholder = placeholder.split()[0] # get placeholder (_multiword_1)
+
+            if placeholder in placeholders:
+                orig_phrase = placeholders[placeholder]
+
+                # match original phrase and classify this shit
+                for pattern, category in regex_patterns.items():
+                    if re.fullmatch(pattern, orig_phrase):
+                        final_tokens.append(f"Lexeme: {orig_phrase} -> Classification : {category}")
+                        break
+            else: # pag di nahanap
+                final_tokens.append(matched_token)
+        else: # pag di rin nahanap
+            final_tokens.append(matched_token)
+
+    # print final matched tokens PLSPSLSLSPSL
+    for final_token in final_tokens:
+        print(final_token)
 
 # Function to read the file and process each line
 def process_file(file_path):
