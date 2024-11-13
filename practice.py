@@ -55,7 +55,7 @@ regex_patterns = {
 def tokenize_and_match(line):
     # Step 1: Handle quoted strings and preserve them as one token
     # This will match any quoted string and preserve it as a single token
-    quoted_string_pattern = r'"[^"]*"|[^"\s]+'
+    quoted_string_pattern = r'"[^"]*"|#[^#]*#|[^"\s]+'
     tokens = []
     
     # contains the multiword regexes (highest priority in checking)
@@ -68,23 +68,32 @@ def tokenize_and_match(line):
     # We match the string based on its priority list
     # Find all quoted strings and add them to the tokens list
     # Step 2.1: Find all multiword strings and add them to the tokens list
+    # we should have a loop that contains:
+        # 1. find all multiword strings and add them to token list then remove that part of string
+        # 2. check for variable
+        # 3.
+    # while line:
+
     for regex in multiword_regexes:
         for match in re.finditer(regex, line):
-            print(match.group(0))
-            tokens.append(match.group(0))
-            line = line.replace(match.group(0), "")
-            print("TEST: ", line)
-    # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
+            # tokens.append(match.group(0))
+            line = line.replace(match.group(0), f"#{match.group(0)}#", 1)
+            # print("test: ", line)
+    # # Step 2.2: Split the remaining line by spaces, ensuring no quoted strings are split
     for match in re.finditer(quoted_string_pattern, line):
-        # print(match.group(0))
+        print("debug: ", match.group(0))
+        if(match.group(0).startswith('#') and match.group(0).endswith('#')):
+            slice_hashtag = slice(1,-1)
+            tokens.append(match.group(0)[slice_hashtag])
+            continue
         if(match.group(0).startswith('"') and match.group(0).endswith('"')):
             tokens.append("\"")
             tokens.append(match.group(0))
             tokens.append("\"")
             continue
         tokens.append(match.group(0))
-
-    
+    print(tokens)
+    # return
     # Step 3: Match each token with the regex patterns
     for token in tokens:
         matched = False
