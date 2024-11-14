@@ -51,12 +51,12 @@ regex_patterns = {
     r'^WTF\?$' : 'Case Statement',
     r'^OMG$' : 'Case Statement',
     r'^OMGWTF$' : 'Case Statement',
-    r'^IM IN YR$' : 'Loop Statement',
+    r'^IM IN YR$' : 'Loop Delimeter',
     r'^UPPIN$' : 'Loop Statement',
     r'^NERFIN$' : 'Loop Statement',
     r'^YR$' : 'Loop Statement',
     r'^TIL$' : 'Loop Statement',
-    r'^IM OUTTA YR$' : 'Loop Statement',
+    r'^IM OUTTA YR$' : 'Loop Delimeter',
     r'^HOW IZ I$' : 'Function Statement',
     r'^IF U SAY SO$' : 'Function Statement',
     r'^GTFO$' : 'Break/Return',
@@ -171,7 +171,7 @@ def tokenize_and_match(line):
                     if re.fullmatch(pattern, orig_phrase): # check if there is a match between the regex and the original phrase
                         if category == "Function Call" or category == "Function Statement":
                             next_token_is_fnc_id = True
-                        elif category == "Loop Statement":
+                        elif category == "Loop Delimeter":
                             next_token_is_loop_id = True
                         final_tokens.append(f"Lexeme: {orig_phrase} -> Classification : {category}")
                         break
