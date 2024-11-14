@@ -22,6 +22,7 @@ regex_patterns = {
     r'^TLDR$' : 'Multiple Line Comment',
     r'^ITZ$' : 'Variable Assignment',
     r'^R$' : 'Variable Assignment',
+    r'^\+$': 'Operator',
     r'^SUM OF$' : 'Arithmetic Operation',
     r'^DIFF OF$' : 'Arithmetic Operation',
     r'^PRODUKT OF$' : 'Arithmetic Operation',
@@ -64,12 +65,12 @@ regex_patterns = {
     r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
+    r'^(WIN|FAIL)$' : 'Literal',
+    r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
     r'^-?\d*\.\d+$' : 'Literal',  # Fixed pattern for floating-point literals
     r'"[^"]*"|[^"\s]+' : 'Literal', # this was changed
-    r'^(WIN|FAIL)$' : 'Literal',
     r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
-    r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier'
 }
@@ -145,9 +146,14 @@ def tokenize_and_match(line):
     # replace the multiwords with its original names (which is indicated by the placeholders dictionary)
     # this indicates that the statement after a function category is a function identifier
     next_token_is_fnc_id = False
+    next_token_is_loop_id = False
     final_tokens = []
 
     for matched_token in matched_tokens:
+        if next_token_is_loop_id:
+            final_tokens.append(f"Lexeme: {matched_token.split(":")[1].strip()} : Loop Identifier")
+            next_token_is_loop_id = False
+            continue
         if next_token_is_fnc_id:
             final_tokens.append(f"Lexeme: {matched_token.split(":")[1].strip()} : Function Identifier")
             next_token_is_fnc_id = False
@@ -165,6 +171,8 @@ def tokenize_and_match(line):
                     if re.fullmatch(pattern, orig_phrase): # check if there is a match between the regex and the original phrase
                         if category == "Function Call" or category == "Function Statement":
                             next_token_is_fnc_id = True
+                        elif category == "Loop Statement":
+                            next_token_is_loop_id = True
                         final_tokens.append(f"Lexeme: {orig_phrase} -> Classification : {category}")
                         break
             else: # if placeholder was not found
