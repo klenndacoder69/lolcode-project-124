@@ -143,16 +143,16 @@ def tokenize_and_match(line):
             matched_tokens.append(f"No match for: {token}")
 
     # replace the multiwords with its original names (which is indicated by the placeholders dictionary)
-    # this indicates that the statements after a function category is a function identifier
+    # this indicates that the statement after a function category is a function identifier
     next_token_is_fnc_id = False
     final_tokens = []
 
     for matched_token in matched_tokens:
         if next_token_is_fnc_id:
-            final_tokens.append(f"Lexeme: {matched_token.split(":")[1]} : Function Identifier")
+            final_tokens.append(f"Lexeme: {matched_token.split(":")[1].strip()} : Function Identifier")
             next_token_is_fnc_id = False
             continue
-        if 'multiword' in matched_token:
+        if '_multiword_' in matched_token:
             # extract placeholder
             placeholder = matched_token.split(":")[1].strip() # ['Lexeme', ' _multiword_1 -> Classification', ' Arithmetic Operation']
             placeholder = placeholder.split()[0] # get placeholder (_multiword_1)
@@ -169,6 +169,10 @@ def tokenize_and_match(line):
                         break
             else: # if placeholder was not found
                 final_tokens.append(matched_token)
+        # if _multiword_ is not found
+        else:
+            final_tokens.append(matched_token)
+            
 
 
     # print final matched tokens 
