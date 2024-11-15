@@ -22,7 +22,7 @@ regex_patterns = {
     r'^TLDR$' : 'Multiple Line Comment',
     r'^ITZ$' : 'Variable Assignment',
     r'^R$' : 'Variable Assignment',
-    r'^\+$': 'Operator',
+    r'^\+$' : 'Operator',
     r'^SUM OF$' : 'Arithmetic Operation',
     r'^DIFF OF$' : 'Arithmetic Operation',
     r'^PRODUKT OF$' : 'Arithmetic Operation',
@@ -41,8 +41,10 @@ regex_patterns = {
     r'^SMOOSH$' : 'String Operation',
     r'^MAEK$' : 'Typecasting',
     r'^AN$' : 'ASK MAAM/UNKNOWN',
+    r'^A$' : 'Typecasting',
     r'^IS NOW A$' : 'Typecasting',
     r'^VISIBLE$' : 'Output Keyword',
+    r'^GIMMEH$' : 'Input Keyword',
     r'^O RLY\?$' : 'Conditional Statement',
     r'^YA RLY$' : 'Conditional Statement',
     r'^MEBBE$' : 'Conditional Statement',
@@ -51,12 +53,13 @@ regex_patterns = {
     r'^WTF\?$' : 'Case Statement',
     r'^OMG$' : 'Case Statement',
     r'^OMGWTF$' : 'Case Statement',
-    r'^IM IN YR$' : 'Loop Delimeter',
+    r'^IM IN YR$' : 'Loop Delimiter',
     r'^UPPIN$' : 'Loop Statement',
     r'^NERFIN$' : 'Loop Statement',
     r'^YR$' : 'Loop Statement',
     r'^TIL$' : 'Loop Statement',
-    r'^IM OUTTA YR$' : 'Loop Delimeter',
+    r'^WILE$' : 'Loop Statement',
+    r'^IM OUTTA YR$' : 'Loop Delimiter',
     r'^HOW IZ I$' : 'Function Statement',
     r'^IF U SAY SO$' : 'Function Statement',
     r'^GTFO$' : 'Break/Return',
@@ -111,8 +114,8 @@ def tokenize_and_match(line):
             tokens.append("\"")
             continue
         if(match.group(0) == "BTW" or match.group(0) == "OBTW" or match.group(0) == "TLDR"):
-            tokens.append(match.group(0))
-            break
+                tokens.append(match.group(0))
+                break
         tokens.append(match.group(0))
     
 
@@ -184,21 +187,37 @@ def tokenize_and_match(line):
 
 
     # print final matched tokens 
-    for final_token in final_tokens:
-        print(final_token)
+    # for final_token in final_tokens:
+    #     print(final_token)
+
+    # this will clear output file 
+    with open("out.txt", "w") as fp:
+        pass
+
+    with open("out.txt", "a") as fp:
+        for final_token in final_tokens:
+            fp.write(final_token + '\n')
+            print(final_token)
 
 # Function to read the file and process each line
 def process_file(file_path):
+    multiline_comment = False # flag to indicate if the line is part of multiline comment
     with open(file_path, 'r') as file:
         for line in file:
+            if multiline_comment and line.strip() != "TLDR": # while multiline comment is true, and tldr not found, ignore line
+                continue
+            else:
+                multiline_comment = False
             line = line.strip()
             if line:
                 print(f"\nProcessing line: {line}")
+                if(line.strip() == "OBTW"): # if OBTW is detected set flag to true
+                    multiline_comment = True
                 tokenize_and_match(line)
 
 def main():
     root = Tk()
-    root.withdraw()  # Hide the main window
+    root.withdraw()  # hide main window
     file_path = filedialog.askopenfilename(filetypes=[("LOL Files", "*.lol")])
     if file_path:
         process_file(file_path)
