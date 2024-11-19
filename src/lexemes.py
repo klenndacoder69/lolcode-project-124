@@ -183,7 +183,6 @@ def tokenize_and_match(line):
     next_token_is_fnc_id = False
     next_token_is_loop_id = False
     final_tokens = []
-
         # The sole purpose of this for loop is to check whether the matched tokens are function/loop identifiers
     for matched_token in matched_tokens:
         if next_token_is_loop_id:
@@ -219,20 +218,32 @@ def tokenize_and_match(line):
                 final_tokens.append(matched_token)
         else:
             final_tokens.append(matched_token)
-            
+    
     with open("out.txt", "a") as fp:
+        line_lexemes = []
+        line_classifications = []
         for final_token in final_tokens:
             fp.write(final_token + '\n')
-            print(final_token)
 
+            # Split the token into lexeme and classification
+            parts = final_token.split(" -> ")
+            lexeme = parts[0].split(":")[1]
+            classification = parts[1].split(":")[1]
+            line_lexemes.append(lexeme)
+            line_classifications.append(classification)
+            
+    return line_lexemes, line_classifications
 # Function to read the file and process each line
 def process_file(file_path):
 
-    # Flag to indicate if the line is part of multiline comment
+        # Instantiate the lexemes and classifications arrays (contains all lexemes and classifications of the input file)
+    lexemes = []
+    classifications = []
+        # Flag to indicate if the line is part of multiline comment
     multiline_comment = False 
     with open(file_path, 'r') as file:
         for line in file:
-            # While multiline comment is true, and tldr not found, ignore line
+                # While multiline comment is true, and tldr not found, ignore line
             if multiline_comment and line.strip() != "TLDR": 
                 continue
             else:
@@ -244,13 +255,20 @@ def process_file(file_path):
                 # If OBTW is detected set flag to true
                 if(line.strip() == "OBTW"): 
                     multiline_comment = True
-                tokenize_and_match(line)
+                line_lexeme, line_classification = tokenize_and_match(line)
+                lexemes.extend(line_lexeme)
+                classifications.extend(line_classification)
 
-def main():
+
+    return list(zip(lexemes, classifications))
+
+def lexemes():
     root = Tk()
     root.withdraw()  # hide main window
     file_path = filedialog.askopenfilename(filetypes=[("LOL Files", "*.lol")])
     if file_path:
-        process_file(file_path)
-
-main()
+        dict_lexeme = process_file(file_path)
+    print(dict_lexeme)
+    return dict_lexeme
+if __name__ == "__main__":
+    lexemes()
