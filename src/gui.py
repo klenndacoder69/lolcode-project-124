@@ -21,13 +21,13 @@ class Interpreter:
         self.button = tk.Button(self.root, text="Input LOL file", command=self.open_file)
         self.button.pack()
 
-    def display_symboltable(self, dict_lexeme):
+    def display_symboltable(self, lexemes):
         # tree view
         for item in self.symtree.get_children():
             self.symtree.delete(item)
 
         # put lexemes in the tree view
-        for lexeme, classification in dict_lexeme:
+        for lexeme, classification in lexemes:
             self.symtree.insert('', 'end', values=(lexeme, classification))
 
     def open_file(self):
