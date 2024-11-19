@@ -184,16 +184,6 @@ def tokenize_and_match(line):
         else:
             final_tokens.append(matched_token)
             
-
-
-    # print final matched tokens 
-    # for final_token in final_tokens:
-    #     print(final_token)
-
-    # this will clear output file 
-    with open("out.txt", "w") as fp:
-        pass
-
     with open("out.txt", "a") as fp:
         for final_token in final_tokens:
             fp.write(final_token + '\n')
