@@ -219,18 +219,17 @@ def tokenize_and_match(line):
         else:
             final_tokens.append(matched_token)
     
-    with open("out.txt", "a") as fp:
-        line_lexemes = []
-        line_classifications = []
-        for final_token in final_tokens:
-            fp.write(final_token + '\n')
-
-            # Split the token into lexeme and classification
-            parts = final_token.split(" -> ")
-            lexeme = parts[0].split(":")[1]
-            classification = parts[1].split(":")[1]
-            line_lexemes.append(lexeme)
-            line_classifications.append(classification)
+    line_lexemes = []
+    line_classifications = []
+    for final_token in final_tokens:
+        # Split the token into lexeme and classification
+        # Note: In case you want to see, or get the strings (e.g: Lexeme: NOOB -> Classification: Lmao), you can access these using final_token
+        parts = final_token.split(" -> ")
+        lexeme = parts[0].split(":")[1]
+        classification = parts[1].split(":")[1]
+        line_lexemes.append(lexeme)
+        line_classifications.append(classification)
+        
             
     return line_lexemes, line_classifications
 # Function to read the file and process each line
@@ -263,8 +262,6 @@ def process_file(file_path):
     return list(zip(lexemes, classifications))
 
 def lexemes():
-    root = Tk()
-    root.withdraw()  # hide main window
     file_path = filedialog.askopenfilename(filetypes=[("LOL Files", "*.lol")])
     if file_path:
         dict_lexeme = process_file(file_path)
