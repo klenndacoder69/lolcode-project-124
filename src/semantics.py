@@ -26,21 +26,26 @@ def arithmetic_operation(line, variable_storage):
 
     # Identify the operation and extract operands
     if line.startswith("SUM OF"):
-        operands = line[7:].strip().split(" AN ")
+        arg = line.split("SUM OF")
+        operands = arg[1].strip().split(" AN ")
         result = sum(map(lambda x: evaluate_operand(x, variable_storage), operands))
     elif line.startswith("DIFF OF"):
-        operands = line[8:].strip().split(" AN ")
+        arg = line.split("DIFF OF")
+        operands = arg[1].strip().split(" AN ")
         result = evaluate_operand(operands[0], variable_storage) - evaluate_operand(operands[1], variable_storage)
     elif line.startswith("PRODUKT OF"):
-        operands = line[11:].strip().split(" AN ")
+        arg = line.split("PRODUKT OF")
+        operands = arg[1].strip().split(" AN ")
         result = 1
         for operand in operands:
             result *= evaluate_operand(operand, variable_storage)
     elif line.startswith("QUOSHUNT OF"):
-        operands = line[11:].strip().split(" AN ")
+        arg = line.split("QUOSHUNT OF")
+        operands = arg[1].strip().split(" AN ")
         result = evaluate_operand(operands[0], variable_storage) / evaluate_operand(operands[1], variable_storage)
     elif line.startswith("MOD OF"):
-        operands = line[7:].strip().split(" AN ")
+        arg = line.split("MOD OF")
+        operands = arg[1].strip().split(" AN ")
         result = evaluate_operand(operands[0], variable_storage) % evaluate_operand(operands[1], variable_storage)
     else:
         raise ValueError(f"Unsupported operation: {line}")
