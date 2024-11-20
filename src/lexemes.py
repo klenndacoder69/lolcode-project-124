@@ -150,7 +150,6 @@ def tokenize_and_match(line):
         This array contains the substituted multiwords
     '''
     matched_tokens = []
-
         # This for loop iterates over each token with a quotation mark which indicates a string literal
     for token in tokens:
 
@@ -233,21 +232,20 @@ def tokenize_and_match(line):
             
     return line_lexemes, line_classifications
 # Function to read the file and process each line
-def process_file(file_path):
+def get_lexemes(tokenizedList):
 
         # Instantiate the lexemes and classifications arrays (contains all lexemes and classifications of the input file)
     lexemes = []
     classifications = []
         # Flag to indicate if the line is part of multiline comment
-    multiline_comment = False 
-    with open(file_path, 'r') as file:
-        for line in file:
+    multiline_comment = False
+    for element in tokenizedList:
                 # While multiline comment is true, and tldr not found, ignore line
-            if multiline_comment and line.strip() != "TLDR": 
+            if multiline_comment and element.strip() != "TLDR": 
                 continue
             else:
                 multiline_comment = False
-            line = line.strip()
+            line = element.strip()
             if line:
                 print(f"\nProcessing line: {line}")
                 
@@ -259,13 +257,5 @@ def process_file(file_path):
                 classifications.extend(line_classification)
 
 
-    return list(zip(lexemes, classifications))
 
-def lexemes():
-    file_path = filedialog.askopenfilename(filetypes=[("LOL Files", "*.lol")])
-    if file_path:
-        dict_lexeme = process_file(file_path)
-    print(dict_lexeme)
-    return dict_lexeme
-if __name__ == "__main__":
-    lexemes()
+    return list(zip(lexemes, classifications))
