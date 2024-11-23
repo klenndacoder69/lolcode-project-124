@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import Scrollbar, filedialog, messagebox, ttk
 import os
 from lexemes import get_lexemes
-from semantics import get_semantics
 
 class InterpreterApp:
     def __init__(self, root):
