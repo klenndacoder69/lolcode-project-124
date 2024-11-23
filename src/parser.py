@@ -72,7 +72,7 @@ class Parser:
                 elif self.current_token()[1] == "Single Line Comment" or self.current_token()[1] == "Starting Multiple Line Comment":
                     self.parse_comments()
 
-                # DECLARING VARIABLES
+                # DECLARING VARIABLES --------------
                 elif self.current_token()[1] == "Starting Declare Variables":
                     self.consume("Starting Declare Variables")  # WAZZUP
 
@@ -102,6 +102,12 @@ class Parser:
                             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                             break
                     self.consume("Ending Declare Variables")  # BUHBYE
+
+                elif self.current_token()[1] == "Input Keyword":  # GIMMEH always uses a variable
+                    self.consume("Input Keyword")
+                    self.consume("Variable Identifier")
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
 
                 elif self.current_token()[1] == "Output Keyword":  # VISIBLE
                     self.parse_output()
