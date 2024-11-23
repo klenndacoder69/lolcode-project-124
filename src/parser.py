@@ -162,6 +162,74 @@ class Parser:
                         self.consume("Type Identifier")
                         self.check_for_valid_inline_comments()
 
+                elif self.current_token()[0] == "WTF?":
+                    self.consume("Case Statement")
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
+                    
+                    while self.current_token():
+
+                        if self.current_token()[0] == "OMG":
+
+                            self.consume("Case Statement") # OMG 
+                            self.consume("Literal") # no. (e.g: OMG 1, OMG 2, OMG 3...)
+                            self.check_for_valid_inline_comments()
+                            self.consume("Linebreak")
+                            while self.current_token() and self.current_token()[0] not in ["GTFO", "OMGWTF"]:
+                                print("\nThis is the current token:", self.current_token())
+                                self.consume()
+                            if self.current_token() and self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
+                                self.consume("Case Statement")
+                                self.check_for_valid_inline_comments()
+                                self.consume("Linebreak")
+                                # contents inside OMGWTF
+                                while self.current_token() and self.current_token()[0] != "OIC":
+                                    self.consume()
+                                self.consume("Conditional Statement")
+                                self.check_for_valid_inline_comments()
+                                self.consume("Linebreak")
+                                break
+                            # if token is not OMGWTF, or it is a normal OMG and Literal Combination (with a GTFO delimiter)
+                            self.consume("Break/Return")
+                            self.check_for_valid_inline_comments()
+                            self.consume("Linebreak")
+                        else:
+                            raise SyntaxError("Error while parsing case statement. Expected 'OMG'.")
+                        
+                            
+
+                        #     self.consume("Break/Return")
+                        #     self.check_for_valid_inline_comments()
+                        #     self.consume("Linebreak")
+                                
+                        # elif self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
+                        #     self.consume("Case Statement")
+                        #     self.consume("Literal")
+                        #     self.check_for_valid_inline_comments()
+                        #     while self.current_token() and self.current_token()[0] != "OIC":
+                        #         self.consume()
+                        #     self.consume("Conditional Statement")
+                        #     self.check_for_valid_inline_comments()
+                        #     self.consume("Linebreak")
+                        #     print("tite")
+                        #     breakself.consume("Break/Return")
+                        #     self.check_for_valid_inline_comments()
+                        #     self.consume("Linebreak")
+                                
+                        # elif self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
+                        #     self.consume("Case Statement")
+                        #     self.consume("Literal")
+                        #     self.check_for_valid_inline_comments()
+                        #     while self.current_token() and self.current_token()[0] != "OIC":
+                        #         self.consume()
+                        #     self.consume("Conditional Statement")
+                        #     self.check_for_valid_inline_comments()
+                        #     self.consume("Linebreak")
+                        #     print("tite")
+                        #     break
+
+                            
+
                 # elif self.current_token()[1] == ""
                 else:
                     self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
