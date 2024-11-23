@@ -160,9 +160,9 @@ class Parser:
             # Multi-line comment: Consume 'OBTW', process the comment, and end with 'TLDR'
             self.consume("Starting Multiple Line Comment")  # OBTW
             self.consume("Linebreak")  # Consume the linebreak after OBTW
-            while self.current_token() and self.current_token()[0] != "TLDR":
+            while self.current_token() and self.current_token()[1] != "Ending Multiple Line Comment":
                 self.consume()  # Consume each self.current_token() inside the comment
-            if self.current_token()[0] == "Ending Multiple Line Comment":
+            if self.current_token()[1] == "Ending Multiple Line Comment":
                 self.consume("Ending Multiple Line Comment")  # TLDR
                 self.consume("Linebreak")  # Consume the linebreak after TLDR
 
@@ -222,11 +222,34 @@ class Parser:
             self.errors.append(f"Unexpected literal at token '{self.current_token()[0]}'.")
     def parse_expression(self):
         """Parse an expression."""
-        if self.current_token()[1] in ["Arithmetic Operation", "Boolean Operation", "Comparison Operation"]:
+        if self.current_token()[1] == "Arithmetic Operation":
             self.consume(self.current_token()[1])
             self.parse_expression()  # Operand 1
             self.consume("Operator Separator")  # AN
             self.parse_expression()  # Operand 2
+        elif self.current_token()[1] == "Comparison Operation":
+            if self.current_token()[0] in ["BOTH SAEM", "DIFFRINT"]:
+                self.consume("Comparison Operation")
+                self.parse_expression()  # Operand 1
+                self.consume("Operator Separator")  # AN
+                self.parse_expression()  # Operand 2
+        elif self.current_token()[1] == "Boolean Operation":
+            if self.current_token()[0] == "NOT":
+                self.consume("Boolean Operation")
+                self.parse_expression() # Operand 1 for NOT
+            if self.current_token()[0] in ["BOTH OF", "EITHER OF", "WON OF"]:
+                self.consume("Boolean Operation")
+                self.parse_expression()  # Operand 1
+                self.consume("Operator Separator")  # AN
+                self.parse_expression()  # Operand 2
+            if self.current_token()[0] in ["ALL OF", "ANY OF"]:
+                self.consume("Boolean Operation")
+                self.parse_expression()
+                # There are infinite operands, so we must create a while loop
+                while self.current_token() and self.current_token()[1] != "Arity Delimiter":
+                    self.consume("Operator Separator")
+                    self.parse_expression()
+                self.consume("Arity Delimiter")
         elif self.current_token()[1] in ["Literal", "Variable Identifier", "String Delimiter"]:
             if self.current_token()[1] == "String Delimiter":
                 self.parse_literal()
