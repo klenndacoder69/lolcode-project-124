@@ -73,12 +73,12 @@ regex_patterns = {
     r'^\n$': "Linebreak",
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^(WIN|FAIL)$' : 'Literal',
+    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Type Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
     # Fixed pattern for floating-point literals
     r'^-?\d*\.\d+$' : 'Literal',  
     r'"[^"]*"|[^"\s]+' : 'Literal', 
-    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Type Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier'
 }
