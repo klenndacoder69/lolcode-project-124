@@ -114,12 +114,16 @@ class Parser:
 
                 elif self.current_token()[1] == "Variable Identifier": # R (variable assignment)
                     self.consume("Variable Identifier")
-                    self.consume("Variable Assignment")
-                    if self.current_token() and self.current_token()[1] == "Literal":
-                        self.parse_expression()
-                    if self.current_token() and self.current_token()[1] == "String Concatenation":
-                        self.parse_smoosh()
-    
+                    if self.current_token()[1] == "Variable Assignment":
+                        self.consume("Variable Assignment")
+                        if self.current_token() and self.current_token()[1] == "Literal":
+                            self.parse_expression()
+                        if self.current_token() and self.current_token()[1] == "String Concatenation":
+                            self.parse_smoosh()
+                    if self.current_token()[1] == "Typecasting":
+                        self.consume("Typecasting")
+                        self.consume("Type Identifier")
+                        self.check_for_valid_inline_comments()
 
                 else:
                     self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")

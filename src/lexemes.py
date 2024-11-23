@@ -71,17 +71,14 @@ regex_patterns = {
     r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
     r'^\n$': "Linebreak",
-
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^(WIN|FAIL)$' : 'Literal',
     r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
-
     # Fixed pattern for floating-point literals
     r'^-?\d*\.\d+$' : 'Literal',  
-
     r'"[^"]*"|[^"\s]+' : 'Literal', 
-    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
+    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Type Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier'
 }
@@ -162,6 +159,7 @@ def tokenize_and_match(line):
             if re.fullmatch(pattern, token): # dapat exact 
 
                     # If category is a string literal, then we remove its quotes and print
+                
                 if category == "Literal" and token.startswith('"') and token.endswith('"'):
                     x = slice(1,-1)
 
@@ -169,7 +167,7 @@ def tokenize_and_match(line):
                     matched_tokens.append(f"Lexeme: {token[x]} -> Classification: {category}")
                     matched = True
                     break
-
+                
                     # If it is not a string literal, it immediately appends
                 matched_tokens.append(f"Lexeme: {token} -> Classification: {category}")
                 matched = True
