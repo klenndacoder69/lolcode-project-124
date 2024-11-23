@@ -114,52 +114,32 @@ class Parser:
                 elif self.current_token()[1] in ["Arithmetic Operation", "Comparison Operation", "Boolean Operation"]: 
                     self.parse_expression()
                     self.consume("Linebreak")
+                    # handle the conditional statements
                     if self.current_token() and self.current_token()[0] == "O RLY?":
                         self.consume("Conditional Statement")
                         self.check_for_valid_inline_comments()
                         self.consume("Linebreak")
+                        # check if the next token is YA RLY
                         if self.current_token() and self.current_token()[0] == "YA RLY":
 
                             self.consume("Conditional Statement")
                             self.check_for_valid_inline_comments()
                             self.consume("Linebreak")
                             print(self.current_token())
+                            # NO WAI is optional, but we still check it. We check for NO WAI and OIC
                             while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
-                                self.consume()
-                                print("tite: ", self.current_token())
-                            if self.current_token() and self.current_token()[0] == "NO WAI":
+                                self.consume() # we consume each thing inside the o rly thing
+
+                            if self.current_token() and self.current_token()[0] == "NO WAI": # if no wai is present, then we check until oic
                                 self.consume("Conditional Statement")
                                 self.check_for_valid_inline_comments()
                                 self.consume("Linebreak")
                                 while self.current_token() and self.current_token()[0] != "OIC":
                                     self.consume()
-                            if self.current_token() and self.current_token()[0] == "OIC":
+                            if self.current_token() and self.current_token()[0] == "OIC": # however if no wai is not present, then we check oic directly
                                 self.consume("Conditional Statement")
                                 self.check_for_valid_inline_comments()
-                                self.consume("Linebreak")
-                            # while self.current_token()[0] != "NO WAI" or self.current_token()[0] != "OIC":
-                                # print(self.current_token())
-                                # self.consume(self.current_token()[1]) # consume each thing inside the o rly thing
-                            # while self.current_token()[0] != "NO WAI" or self.current_token()[0] != "OIC":
-                            #     self.consume(self.current_token()[1]) # consume each thing inside the o rly thing
-
-                            # if self.current_token()[0] == "NO WAI": # if no wai is present, then we check until oic
-                            #     self.consume("Conditional Statement")
-                            #     self.check_for_valid_inline_comments()
-                            #     self.consume("Linebreak")
-
-                            #     while self.current_token()[0] != "OIC":
-                            #         self.consume(self.current_token()[1]) # consume each thing inside the no wai thing
-
-                            #         self.consume("Conditional Statement")
-                            #         self.check_for_valid_inline_comments()
-                            #         self.consume("Linebreak")
-                            # elif self.current_token()[0] == "OIC": # if no wai is not present, then we proceed directly to oic
-                            #     self.consume("Conditional Statement")
-                            #     self.check_for_valid_inline_comments()
-                            #     self.consume("Linebreak")
-                            #     continue
-                           
+                                self.consume("Linebreak")                   
                     else:
                         print (f"Bad loop lods '{self.current_token()[1]}'.")
                         raise SyntaxError(f"Bad loop lods '{self.current_token()[0]}'.")
