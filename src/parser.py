@@ -111,7 +111,16 @@ class Parser:
 
                 elif self.current_token()[1] == "Output Keyword":  # VISIBLE
                     self.parse_output()
-                    pass
+
+                elif self.current_token()[1] == "Variable Identifier": # R (variable assignment)
+                    self.consume("Variable Identifier")
+                    self.consume("Variable Assignment")
+                    if self.current_token() and self.current_token()[1] == "Literal":
+                        self.parse_expression()
+                    if self.current_token() and self.current_token()[1] == "String Concatenation":
+                        self.parse_smoosh()
+    
+
                 else:
                     self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                     raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
@@ -121,6 +130,16 @@ class Parser:
             print("Program is syntactically correct.\n")
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
+    
+    def parse_arithmetic(self):
+        """Parse arithmetic operations."""
+        if self.current_token()[1] in ["Arithmetic Operation", "Boolean Operation", "Comparison Operation"]:
+            self.consume(self.current_token()[1])
+            self.parse_arithmetic()  # Operand 1
+            self.consume("Operator Separator")  # AN
+            self.parse_arithmetic()  # Operand 2
+        elif self.current_token()[1] in ["Literal", "Variable Identifier"]:
+            self.consume(self.current_token()[1])
 
     def parse_comments(self):
         """Parse comments before the program starts (HAI)."""
@@ -145,7 +164,21 @@ class Parser:
         if self.current_token() and self.current_token()[1] == "Variable Assignment":  # ITZ
             self.consume("Variable Assignment")
             self.parse_expression()
-    
+    def parse_smoosh(self):
+        self.consume("String Concatenation")
+        # This is needed as SMOOSH are not able to have a logical expression
+        while self.current_token() and self.current_token()[1] != "Linebreak":
+            if self.current_token()[1] in ["Literal", "String Delimiter"]:
+                self.parse_literal()
+            elif self.current_token()[1] == "Variable Identifier":
+                self.consume("Variable Identifier")
+            elif self.current_token()[1] == "Operator Separator":
+                self.consume("Operator Separator")
+            elif self.current_token()[1] == "Single Line Comment":
+                self.check_for_valid_inline_comments()
+            else:
+                self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+                raise SyntaxError("Error while parsing string concatenation. Logical expressions are not allowed.")
     def parse_output(self):
         """Parse an output statement (VISIBLE)."""
         self.consume("Output Keyword")  # VISIBLE
@@ -159,19 +192,13 @@ class Parser:
                 self.parse_expression()
                 continue
             elif self.current_token()[1] == "String Concatenation":
-                self.consume("String Concatenation")
-                # This is needed as SMOOSH are not able to have a logical expression
-                while self.current_token() and self.current_token()[1] != "Linebreak":
-                    if self.current_token()[1] in ["Literal", "String Delimiter"]:
-                        self.parse_literal()
-                    elif self.current_token()[1] == "Variable Identifier":
-                        self.consume("Variable Identifier")
-                    elif self.current_token()[1] == "Operator Separator":
-                        self.consume("Operator Separator")
-                    else:
-                        self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-                        raise SyntaxError("Error while parsing string concatenation. Logical expressions are not allowed.")
+                self.parse_smoosh()
+                # we return  since we did the loop here
                 return
+            elif self.current_token()[1] == "Operator":
+                self.consume("Operator")
+                self.parse_expression()
+                continue
             # keep parsing            
             self.parse_expression()
     def parse_literal(self):
