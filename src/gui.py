@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import Scrollbar, filedialog, messagebox, ttk
 import os
 from lexemes import get_lexemes
-
+from parser import Parser
 class InterpreterApp:
     def __init__(self, root):
         self.root = root
@@ -225,6 +225,7 @@ class InterpreterApp:
         # GET LEXEMES AND FILL TABLE
         self.fill_table(get_lexemes(self.lines)) # CHANGE FUNCTION CALL CAN USE IMPORT TO NOT 
         print(get_lexemes(self.lines))
+        Parser(get_lexemes(self.lines)).parse_program()
 
     def fill_table(self, lexemes):
         # CLEAR TABLE

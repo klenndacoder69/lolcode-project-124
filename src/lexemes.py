@@ -15,14 +15,14 @@ from tkinter import Tk, filedialog
 # defined regular expression paterns
 
 regex_patterns = {
-    r'^HAI$': 'Code Delimeter',
-    r'^KTHXBYE$': 'Code Delimeter',
+    r'^HAI$': 'Starting Program',
+    r'^KTHXBYE$': 'Ending Program',
     r'^I HAS A$': 'Variable Declaration', 
-    r'^WAZZUP$' : 'Declare Variables',
-    r'^BUHBYE$' : 'Declare Variables',
+    r'^WAZZUP$' : 'Starting Declare Variables',
+    r'^BUHBYE$' : 'Ending Declare Variables',
     r'^BTW$' : 'Single Line Comment',
-    r'^OBTW$' : 'Multiple Line Comment',
-    r'^TLDR$' : 'Multiple Line Comment',
+    r'^OBTW$' : 'Starting Multiple Line Comment',
+    r'^TLDR$' : 'Ending Multiple Line Comment',
     r'^ITZ$' : 'Variable Assignment',
     r'^R$' : 'Variable Assignment',
     r'^\+$' : 'Operator',
@@ -41,7 +41,7 @@ regex_patterns = {
     r'^ALL OF$' : 'Boolean Operation',
     r'^BOTH SAEM$' : 'Comparison Operation',
     r'^DIFFRINT$' : 'Comparison Operation',
-    r'^SMOOSH$' : 'String Operation',
+    r'^SMOOSH$' : 'String Concatenation',
     r'^MAEK$' : 'Typecasting',
     r'^AN$' : 'Operator Separator',
     r'^A$' : 'Typecasting',
@@ -70,6 +70,7 @@ regex_patterns = {
     r'^I IZ$' : 'Function Call',
     r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
+    r'^\n$': "Linebreak",
 
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^(WIN|FAIL)$' : 'Literal',
@@ -228,7 +229,8 @@ def tokenize_and_match(line):
         classification = parts[1].split(":")[1].strip()
         line_lexemes.append(lexeme)
         line_classifications.append(classification)
-        
+    line_lexemes.append("\n")
+    line_classifications.append("Linebreak")
             
     return line_lexemes, line_classifications
 # Function to read the file and process each line
