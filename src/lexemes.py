@@ -43,7 +43,7 @@ regex_patterns = {
     r'^DIFFRINT$' : 'Comparison Operation',
     r'^SMOOSH$' : 'String Operation',
     r'^MAEK$' : 'Typecasting',
-    r'^AN$' : 'ASK MAAM/UNKNOWN',
+    r'^AN$' : 'Operator Separator',
     r'^A$' : 'Typecasting',
     r'^IS NOW A$' : 'Typecasting',
     r'^VISIBLE$' : 'Output Keyword',
@@ -199,7 +199,7 @@ def tokenize_and_match(line):
             placeholder = matched_token.split(":")[1].strip() 
 
                 # Get placeholder (_multiword_1)
-            placeholder = placeholder.split()[0] 
+            placeholder = placeholder.split()[0]
 
             if placeholder in placeholders: 
                 orig_phrase = placeholders[placeholder]
@@ -224,8 +224,8 @@ def tokenize_and_match(line):
         # Split the token into lexeme and classification
         # Note: In case you want to see, or get the strings (e.g: Lexeme: NOOB -> Classification: Lmao), you can access these using final_token
         parts = final_token.split(" -> ")
-        lexeme = parts[0].split(":")[1]
-        classification = parts[1].split(":")[1]
+        lexeme = parts[0].split(":")[1].strip()
+        classification = parts[1].split(":")[1].strip()
         line_lexemes.append(lexeme)
         line_classifications.append(classification)
         

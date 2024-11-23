@@ -225,8 +225,7 @@ class InterpreterApp:
 
         # GET LEXEMES AND FILL TABLE
         self.fill_table(get_lexemes(self.lines)) # CHANGE FUNCTION CALL CAN USE IMPORT TO NOT 
-        get_semantics(self.lines) 
-
+        print(get_lexemes(self.lines))
 
     def fill_table(self, lexemes):
         # CLEAR TABLE
