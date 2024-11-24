@@ -36,6 +36,8 @@ class Parser:
         try:
             # Handle comments outside Starting Program
             multi_flag = False
+            function_flag = False
+            declare_flag = False
             while self.current_token():
                 if self.current_token()[1] == "Starting Program":
                     break  # Begin parsing program after this self.current_token()
@@ -74,6 +76,11 @@ class Parser:
 
                 # DECLARING VARIABLES --------------
                 elif self.current_token()[1] == "Starting Declare Variables":
+
+                    if declare_flag:
+                        self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+                        raise SyntaxError("Error while parsing declare variables. Only one declare variables block is allowed.")
+                    
                     self.consume("Starting Declare Variables")  # WAZZUP
 
                     self.check_for_valid_inline_comments()
@@ -102,6 +109,8 @@ class Parser:
                             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                             break
                     self.consume("Ending Declare Variables")  # BUHBYE
+                    declare_flag = True
+                    function_flag = True
 
                 elif self.current_token()[1] == "Input Keyword":  # GIMMEH always uses a variable
                     self.consume("Input Keyword")
@@ -215,6 +224,8 @@ class Parser:
                     self.consume("Linebreak")
 
                 elif self.current_token()[1] == "Function Start":
+                    if function_flag:
+                        raise SyntaxError("Functions are only allowed to be declared before the variable declaration block.")
                     self.consume("Function Start") # how iz i
                     self.consume("Variable Identifier") # variable name <label>
                     # this part is optional, as a function may have no parameters
