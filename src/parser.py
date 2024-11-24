@@ -184,7 +184,7 @@ class Parser:
                                 self.consume("Linebreak")
                                 # contents inside OMGWTF
                                 while self.current_token() and self.current_token()[0] != "OIC":
-                                    self.consume()
+                                    self.parse_valid_code_block()
                                 self.consume("Conditional Statement")
                                 self.check_for_valid_inline_comments()
                                 self.consume("Linebreak")
@@ -195,45 +195,30 @@ class Parser:
                             self.consume("Linebreak")
                         else:
                             raise SyntaxError("Error while parsing case statement. Expected 'OMG'.")
+                
+                elif self.current_token()[1] == "Loop Start":
+                    self.consume("Loop Start") # im in yr
+                    self.consume("Variable Identifier") # <label>
+                    self.consume("Loop Operation") # uppin  (operation)
+                    self.consume("Loop Construct") # yr
+                    self.consume("Variable Identifier") # variable
+                    if self.current_token() and self.current_token()[1] == "Loop Statement":
+                        # til|wile <expression> is optional
+                        self.consume("Loop Statement") # til|wile
+                        self.parse_expression() # expression
                         
-                            
+                    while self.current_token() and self.current_token()[1] != "Loop End":
+                        self.parse_valid_code_block()
+                    self.consume("Loop End") # im outta yr
+                    self.consume("Variable Identifier") # <label>
+                    self.check_for_valid_inline_comments() # chk for inline comments
+                    self.consume("Linebreak")
 
-                        #     self.consume("Break/Return")
-                        #     self.check_for_valid_inline_comments()
-                        #     self.consume("Linebreak")
-                                
-                        # elif self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
-                        #     self.consume("Case Statement")
-                        #     self.consume("Literal")
-                        #     self.check_for_valid_inline_comments()
-                        #     while self.current_token() and self.current_token()[0] != "OIC":
-                        #         self.consume()
-                        #     self.consume("Conditional Statement")
-                        #     self.check_for_valid_inline_comments()
-                        #     self.consume("Linebreak")
-                        #     print("tite")
-                        #     breakself.consume("Break/Return")
-                        #     self.check_for_valid_inline_comments()
-                        #     self.consume("Linebreak")
-                                
-                        # elif self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
-                        #     self.consume("Case Statement")
-                        #     self.consume("Literal")
-                        #     self.check_for_valid_inline_comments()
-                        #     while self.current_token() and self.current_token()[0] != "OIC":
-                        #         self.consume()
-                        #     self.consume("Conditional Statement")
-                        #     self.check_for_valid_inline_comments()
-                        #     self.consume("Linebreak")
-                        #     print("tite")
-                        #     break
 
-                            
-
-                # elif self.current_token()[1] == ""
                 else:
                     self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                     raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
+                
             self.consume("Ending Program")
             self.check_for_valid_inline_comments()
             print("Errors:\n", self.errors)
@@ -364,6 +349,127 @@ class Parser:
             self.errors.append(f"Invalid expression at self.current_token() '{self.current_token()[0]}'.")
             raise SyntaxError(f"Note: Invalid expression at self.current_token() '{self.current_token()[0]}'.")
 
+    # this is for code blocks
+    def parse_valid_code_block(self):
+        if self.current_token()[1] == "Linebreak":
+                    self.consume("Linebreak")
+
+        elif self.current_token()[1] == "Single Line Comment" or self.current_token()[1] == "Starting Multiple Line Comment":
+            self.parse_comments()
+        elif self.current_token()[1] == "Input Keyword":  # GIMMEH always uses a variable
+                    self.consume("Input Keyword")
+                    self.consume("Variable Identifier")
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
+
+        elif self.current_token()[1] == "Output Keyword":  # VISIBLE
+            self.parse_output()
+        elif self.current_token()[1] in ["Arithmetic Operation", "Comparison Operation", "Boolean Operation"]: 
+            self.parse_expression()
+            self.consume("Linebreak")
+            # handle the conditional statements
+            if self.current_token() and self.current_token()[0] == "O RLY?":
+                self.consume("Conditional Statement")
+                self.check_for_valid_inline_comments()
+                self.consume("Linebreak")
+                # check if the next token is YA RLY
+                if self.current_token() and self.current_token()[0] == "YA RLY":
+
+                    self.consume("Conditional Statement")
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
+                    print(self.current_token())
+                    # NO WAI is optional, but we still check it. We check for NO WAI and OIC
+                    while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
+                        self.parse_valid_code_block() # we consume each thing inside the o rly thing
+
+                    if self.current_token() and self.current_token()[0] == "NO WAI": # if no wai is present, then we check until oic
+                        self.consume("Conditional Statement")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                        while self.current_token() and self.current_token()[0] != "OIC":
+                            self.parse_valid_code_block()
+                    if self.current_token() and self.current_token()[0] == "OIC": # however if no wai is not present, then we check oic directly
+                        self.consume("Conditional Statement")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")                   
+            else:
+                print (f"Bad loop lods '{self.current_token()[1]}'.")
+                raise SyntaxError(f"Bad loop lods '{self.current_token()[0]}'.")
+
+        elif self.current_token()[1] == "Variable Identifier": # R (variable assignment)
+            self.consume("Variable Identifier")
+            if self.current_token()[1] == "Variable Assignment":
+                self.consume("Variable Assignment") # R 10, R SMOOSH, R MAEK
+                if self.current_token() and self.current_token()[1] == "Literal":
+                    self.parse_expression()
+                elif self.current_token() and self.current_token()[1] == "String Concatenation":
+                    self.parse_smoosh()
+                elif self.current_token() and self.current_token()[1] == "Typecasting": # MAEK
+                    self.consume("Typecasting")
+                    self.consume("Variable Identifier")
+                    self.consume("Type Identifier")
+                    self.check_for_valid_inline_comments()
+            elif self.current_token()[1] == "Typecasting": # IS NOW A or MAEK
+                self.consume("Typecasting")
+                self.consume("Type Identifier")
+                self.check_for_valid_inline_comments()
+
+        elif self.current_token()[0] == "WTF?":
+            self.consume("Case Statement")
+            self.check_for_valid_inline_comments()
+            self.consume("Linebreak")
+            
+            while self.current_token():
+
+                if self.current_token()[0] == "OMG":
+
+                    self.consume("Case Statement") # OMG 
+                    self.consume("Literal") # no. (e.g: OMG 1, OMG 2, OMG 3...)
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
+                    while self.current_token() and self.current_token()[0] not in ["GTFO", "OMGWTF"]:
+                        print("\nThis is the current token:", self.current_token())
+                        self.parse_valid_code_block()
+                    if self.current_token() and self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
+                        self.consume("Case Statement")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                        # contents inside OMGWTF
+                        while self.current_token() and self.current_token()[0] != "OIC":
+                            self.parse_valid_code_block()
+                        self.consume("Conditional Statement")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                        break
+                    # if token is not OMGWTF, or it is a normal OMG and Literal Combination (with a GTFO delimiter)
+                    self.consume("Break/Return")
+                    self.check_for_valid_inline_comments()
+                    self.consume("Linebreak")
+                else:
+                    raise SyntaxError("Error while parsing case statement. Expected 'OMG'.")
+        
+        elif self.current_token()[1] == "Loop Start":
+            self.consume("Loop Start") # im in yr
+            self.consume("Variable Identifier") # <label>
+            self.consume("Loop Operation") # uppin  (operation)
+            self.consume("Loop Construct") # yr
+            self.consume("Variable Identifier") # variable
+            if self.current_token() and self.current_token()[1] == "Loop Statement":
+                # til|wile <expression> is optional
+                self.consume("Loop Statement") # til|wile
+                self.parse_expression() # expression
+                
+            while self.current_token() and self.current_token()[1] != "Loop End":
+                self.consume()
+            self.consume("Loop End") # im outta yr
+            self.consume("Variable Identifier") # <label>
+            self.check_for_valid_inline_comments() # chk for inline comments
+            self.consume("Linebreak")
+        
+        else:
+            self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+            raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
 
 
 
