@@ -1,7 +1,7 @@
 HAI
 
     HOW IZ I addNum x y
-        FOUND YR SUM OF x an y
+        FOUND YR SUM OF x AN y
     IF U SAY SO
 
     HOW IZ I printName person

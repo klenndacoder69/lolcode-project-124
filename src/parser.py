@@ -200,7 +200,7 @@ class Parser:
                     self.consume("Loop Start") # im in yr
                     self.consume("Variable Identifier") # <label>
                     self.consume("Loop Operation") # uppin  (operation)
-                    self.consume("Loop Construct") # yr
+                    self.consume("Construct") # yr
                     self.consume("Variable Identifier") # variable
                     if self.current_token() and self.current_token()[1] == "Loop Statement":
                         # til|wile <expression> is optional
@@ -214,7 +214,72 @@ class Parser:
                     self.check_for_valid_inline_comments() # chk for inline comments
                     self.consume("Linebreak")
 
+                elif self.current_token()[1] == "Function Start":
+                    self.consume("Function Start") # how iz i
+                    self.consume("Variable Identifier") # variable name <label>
+                    # this part is optional, as a function may have no parameters
+                    if self.current_token() and self.current_token()[1] == "Linebreak":
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                    else:
+                        # check for the first parameter (as first parameter does not need an AN, and only one YR)
+                        # having a construct may be optional (?)
+                        if self.current_token() and self.current_token()[1] == "Construct":
+                            self.consume("Construct")
+                        self.consume("Variable Identifier")
+                        # for the rest of the parameters
+                        # AN YR may be optional (?)
+                        while self.current_token() and self.current_token()[1] != "Linebreak":
+                            if self.current_token() and self.current_token()[1] == "Operator Separator":
+                                self.consume("Operator Separator") # AN
+                                self.consume("Construct") # YR
+                            self.consume("Variable Identifier") # <variable>
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                    # function body
+                    # function body may end with either a FOUND YR, a GTFO, or directly to IF U SAY SO (only one can exist (?))
+                    while self.current_token() and self.current_token()[1] not in ["Function End", "Return", "Break/Return"]:
+                        self.parse_valid_code_block()
+                    if self.current_token() and self.current_token()[1] == "Return": # FOUND YR
+                        self.consume("Return")
+                        self.parse_expression()
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                    elif self.current_token() and self.current_token()[1] == "Break/Return": # GTFO
+                        self.consume("Break/Return")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                        
+                    self.consume("Function End") # IF U SAY SO
+                    self.check_for_valid_inline_comments() 
+                    self.consume("Linebreak") 
 
+                elif self.current_token()[1] == "Function Call":
+                    self.consume("Function Call")
+                    self.consume("Function Identifier")
+                    # there are no parameters for the function call
+                    if self.current_token() and self.current_token()[1] == "Arity Delimiter":
+                        self.consume("Arity Delimiter")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                    else:
+                        # if there is only one parameter for the function call
+                        if self.current_token() and self.current_token()[1] == "Construct":
+                            self.consume("Construct")
+                        self.parse_expression()
+                        # if there are multiple parameters for the function call
+                        # MKAY might be optional (?)
+                        while self.current_token() and self.current_token()[1] not in ["Arity Delimiter", "Linebreak"]: 
+                            if self.current_token() and self.current_token()[1] == "Operator Separator":
+                                self.consume("Operator Separator")
+                                self.consume("Construct")
+                            self.parse_expression()
+                        # if there is an mkay
+                        if self.current_token() and self.current_token()[1] == "Arity Delimiter":
+                            self.consume("Arity Delimiter") # consume the arity (MKAY)
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                
                 else:
                     self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                     raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
@@ -340,6 +405,7 @@ class Parser:
             if self.current_token()[1] == "String Delimiter":
                 self.parse_literal()
             else:
+                # if not a string delimiter
                 self.consume(self.current_token()[1])
         elif self.current_token()[1] == "Single Line Comment":
             # We must check only when the next self.current_token() is a linebreak
@@ -453,7 +519,7 @@ class Parser:
             self.consume("Loop Start") # im in yr
             self.consume("Variable Identifier") # <label>
             self.consume("Loop Operation") # uppin  (operation)
-            self.consume("Loop Construct") # yr
+            self.consume("Construct") # yr
             self.consume("Variable Identifier") # variable
             if self.current_token() and self.current_token()[1] == "Loop Statement":
                 # til|wile <expression> is optional
