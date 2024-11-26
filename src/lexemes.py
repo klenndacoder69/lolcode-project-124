@@ -15,14 +15,14 @@ from tkinter import Tk, filedialog
 # defined regular expression paterns
 
 regex_patterns = {
-    r'^HAI$': 'Code Delimeter',
-    r'^KTHXBYE$': 'Code Delimeter',
+    r'^HAI$': 'Starting Program',
+    r'^KTHXBYE$': 'Ending Program',
     r'^I HAS A$': 'Variable Declaration', 
-    r'^WAZZUP$' : 'Declare Variables',
-    r'^BUHBYE$' : 'Declare Variables',
+    r'^WAZZUP$' : 'Starting Declare Variables',
+    r'^BUHBYE$' : 'Ending Declare Variables',
     r'^BTW$' : 'Single Line Comment',
-    r'^OBTW$' : 'Multiple Line Comment',
-    r'^TLDR$' : 'Multiple Line Comment',
+    r'^OBTW$' : 'Starting Multiple Line Comment',
+    r'^TLDR$' : 'Ending Multiple Line Comment',
     r'^ITZ$' : 'Variable Assignment',
     r'^R$' : 'Variable Assignment',
     r'^\+$' : 'Operator',
@@ -31,8 +31,8 @@ regex_patterns = {
     r'^PRODUKT OF$' : 'Arithmetic Operation',
     r'^QUOSHUNT OF$' : 'Arithmetic Operation',
     r'^MOD OF$' : 'Arithmetic Operation',
-    r'^BIGGR OF$' : 'Comparison Operation',
-    r'^SMALLR OF$' : 'Comparison Operation',
+    r'^BIGGR OF$' : 'Arithmetic Operation',
+    r'^SMALLR OF$' : 'Arithmetic Operation',
     r'^BOTH OF$' : 'Boolean Operation',
     r'^EITHER OF$' : 'Boolean Operation',
     r'^WON OF$' : 'Boolean Operation',
@@ -41,9 +41,9 @@ regex_patterns = {
     r'^ALL OF$' : 'Boolean Operation',
     r'^BOTH SAEM$' : 'Comparison Operation',
     r'^DIFFRINT$' : 'Comparison Operation',
-    r'^SMOOSH$' : 'String Operation',
+    r'^SMOOSH$' : 'String Concatenation',
     r'^MAEK$' : 'Typecasting',
-    r'^AN$' : 'ASK MAAM/UNKNOWN',
+    r'^AN$' : 'Operator Separator',
     r'^A$' : 'Typecasting',
     r'^IS NOW A$' : 'Typecasting',
     r'^VISIBLE$' : 'Output Keyword',
@@ -56,31 +56,30 @@ regex_patterns = {
     r'^WTF\?$' : 'Case Statement',
     r'^OMG$' : 'Case Statement',
     r'^OMGWTF$' : 'Case Statement',
-    r'^IM IN YR$' : 'Loop Delimiter',
-    r'^UPPIN$' : 'Loop Statement',
-    r'^NERFIN$' : 'Loop Statement',
-    r'^YR$' : 'Loop Statement',
+    r'^IM IN YR$' : 'Loop Start',
+    r'^UPPIN$' : 'Loop Operation',
+    r'^NERFIN$' : 'Loop Operation',
+    # this was changed, since YR is not necessarily for loops only, also for functions
+    r'^YR$' : 'Construct',
     r'^TIL$' : 'Loop Statement',
     r'^WILE$' : 'Loop Statement',
-    r'^IM OUTTA YR$' : 'Loop Delimiter',
-    r'^HOW IZ I$' : 'Function Statement',
-    r'^IF U SAY SO$' : 'Function Statement',
+    r'^IM OUTTA YR$' : 'Loop End',
+    r'^HOW IZ I$' : 'Function Start',
+    r'^IF U SAY SO$' : 'Function End',
     r'^GTFO$' : 'Break/Return',
     r'^FOUND YR$' : 'Return',
     r'^I IZ$' : 'Function Call',
     r'^MKAY$' : 'Arity Delimiter',
     r'\"': 'String Delimiter',
-
+    r'^\n$': "Linebreak",
     # Identifier regex pattern, make sure this comes after specific cases like delimiters
     r'^(WIN|FAIL)$' : 'Literal',
+    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Type Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*)$': 'Variable Identifier',
     r'^(-?[1-9][0-9]*|0)$' : 'Literal',
-
     # Fixed pattern for floating-point literals
     r'^-?\d*\.\d+$' : 'Literal',  
-
     r'"[^"]*"|[^"\s]+' : 'Literal', 
-    r'^(NOOB|NUMBA?R|YARN|TROOF)$' : 'Literal',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Function Identifier',
     r'^([a-zA-Z][a-zA-Z0-9_]*\(.*\))$' : 'Loop Identifier'
 }
@@ -161,6 +160,7 @@ def tokenize_and_match(line):
             if re.fullmatch(pattern, token): # dapat exact 
 
                     # If category is a string literal, then we remove its quotes and print
+                
                 if category == "Literal" and token.startswith('"') and token.endswith('"'):
                     x = slice(1,-1)
 
@@ -168,7 +168,7 @@ def tokenize_and_match(line):
                     matched_tokens.append(f"Lexeme: {token[x]} -> Classification: {category}")
                     matched = True
                     break
-
+                
                     # If it is not a string literal, it immediately appends
                 matched_tokens.append(f"Lexeme: {token} -> Classification: {category}")
                 matched = True
@@ -199,7 +199,7 @@ def tokenize_and_match(line):
             placeholder = matched_token.split(":")[1].strip() 
 
                 # Get placeholder (_multiword_1)
-            placeholder = placeholder.split()[0] 
+            placeholder = placeholder.split()[0]
 
             if placeholder in placeholders: 
                 orig_phrase = placeholders[placeholder]
@@ -224,11 +224,12 @@ def tokenize_and_match(line):
         # Split the token into lexeme and classification
         # Note: In case you want to see, or get the strings (e.g: Lexeme: NOOB -> Classification: Lmao), you can access these using final_token
         parts = final_token.split(" -> ")
-        lexeme = parts[0].split(":")[1]
-        classification = parts[1].split(":")[1]
+        lexeme = parts[0].split(":")[1].strip()
+        classification = parts[1].split(":")[1].strip()
         line_lexemes.append(lexeme)
         line_classifications.append(classification)
-        
+    line_lexemes.append("\n")
+    line_classifications.append("Linebreak")
             
     return line_lexemes, line_classifications
 # Function to read the file and process each line
