@@ -543,7 +543,32 @@ class Parser:
             self.consume("Variable Identifier") # <label>
             self.check_for_valid_inline_comments() # chk for inline comments
             self.consume("Linebreak")
-        
+            
+        elif self.current_token()[1] == "Function Call":
+                    self.consume("Function Call")
+                    self.consume("Function Identifier")
+                    # there are no parameters for the function call
+                    if self.current_token() and self.current_token()[1] == "Arity Delimiter":
+                        self.consume("Arity Delimiter")
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
+                    else:
+                        # if there is only one parameter for the function call
+                        if self.current_token() and self.current_token()[1] == "Construct":
+                            self.consume("Construct")
+                        self.parse_expression()
+                        # if there are multiple parameters for the function call
+                        # MKAY might be optional (?)
+                        while self.current_token() and self.current_token()[1] not in ["Arity Delimiter", "Linebreak"]: 
+                            # if self.current_token() and self.current_token()[1] == "Operator Separator": (removed based on recent corrections)
+                            self.consume("Operator Separator")
+                            self.consume("Construct")
+                            self.parse_expression()
+                        # if there is an mkay (idk abt this)
+                        if self.current_token() and self.current_token()[1] == "Arity Delimiter":
+                            self.consume("Arity Delimiter") # consume the arity (MKAY)
+                        self.check_for_valid_inline_comments()
+                        self.consume("Linebreak")
         else:
             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
             raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
