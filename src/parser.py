@@ -163,6 +163,7 @@ class Parser:
                             self.parse_smoosh()
                         elif self.current_token() and self.current_token()[1] == "Typecasting": # MAEK
                             self.consume("Typecasting")
+                            self.consume("Typecasting")
                             self.consume("Variable Identifier")
                             self.consume("Type Identifier")
                             self.check_for_valid_inline_comments()
