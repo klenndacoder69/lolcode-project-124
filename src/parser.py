@@ -390,6 +390,8 @@ class Parser:
             self.parse_expression()  # Operand 1
             self.consume("Operator Separator")  # AN
             self.parse_expression()  # Operand 2
+
+            
         elif self.current_token()[1] == "Comparison Operation":
             if self.current_token()[0] in ["BOTH SAEM", "DIFFRINT"]:
                 self.consume("Comparison Operation")
