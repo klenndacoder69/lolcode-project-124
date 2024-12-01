@@ -142,11 +142,12 @@ class Parser:
             raise SyntaxError(f"Variable '{variable_name}' not declared.")
         self.consume("Variable Identifier")
         if self.current_token()[1] == "Variable Assignment":  # R
+            print("tite")
             self.consume("Variable Assignment")
             if self.current_token()[0] == "MAEK":
                 self.consume("Typecasting")  # MAEK
-                value = self.parse_expression()
                 self.consume("Typecasting")  # A
+                value = self.parse_expression()
                 new_type = self.current_token()[0]
                 self.consume("Type Identifier")
                 self.IT = self.cast_value(value, new_type)
@@ -156,7 +157,6 @@ class Parser:
                 self.symbol_table[variable_name].update({"type": value_type, "value": value})
         elif self.current_token()[1] == "Typecasting":  # IS NOW A
             self.consume("Typecasting")  # IS NOW A
-            self.consume("Typecasting")  # A
             new_type = self.current_token()[0]
             if new_type not in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
                 raise SyntaxError(f"Invalid type identifier: {new_type}")
