@@ -155,14 +155,9 @@ class Parser:
                 self.consume("Typecasting")  # MAEK
                 self.consume("Typecasting")  # A
                 value = self.parse_expression()
-                # our coding way should change, we must only get the type AFTER checking the syntax
                 new_type = self.current_token()[0]
                 self.consume("Type Identifier")
                 self.IT = self.cast_value(value, new_type)
-                print(self.IT)
-                # if we are going to typecast, or change its value, we get its type, and change the value using cast_value to associate what it should be in
-                self.symbol_table[variable_name].update({"type": new_type, "value": self.cast_value(value, new_type)})
-                print(self.symbol_table)
             else:
                 if self.current_token()[1] == "String Delimiter":
                     self.consume("String Delimiter")
@@ -204,8 +199,6 @@ class Parser:
                 output.append(self.symbol_table[self.current_token()[0]]["value"])
                 self.consume("Variable Identifier")
             elif self.current_token()[1] == "Arithmetic Operation":
-                output.append(self.parse_expression())
-            elif self.current_token()[1] == "Comparison Operation":
                 output.append(self.parse_expression())
             else:
                 self.consume()
@@ -395,58 +388,18 @@ class Parser:
             raise SyntaxError(f"Unexpected boolean operator: {operator}")
 
     def parse_comparison(self):
-        """Parse comparison and relational operations, ensuring TROOF outputs."""
+        """Parse comparison operations."""
         operator = self.current_token()[0]
         self.consume("Comparison Operation")
         left = self.parse_expression()  # Left operand
         self.consume("Operator Separator")  # AN
-        
-        # Check for relational operation
-        if self.current_token()[1] == "Arithmetic Operation":
-            rel_operator = self.current_token()[0]
-            self.consume("Arithmetic Operation")
-            inner_left = left
-            inner_right = self.parse_expression()
-            
-            # Evaluate relational operator
-            if rel_operator == "BIGGR OF":
-                result = max(inner_left, inner_right)
-            elif rel_operator == "SMALLR OF":
-                result = min(inner_left, inner_right)
-            else:
-                raise SyntaxError(f"Unexpected relational operator: {rel_operator}")
-            
-            # The relational result becomes the left operand for the final comparison
-            left = result
-            self.consume("Operator Separator")  # AN
-            right = self.parse_expression()
-        else:
-            right = self.parse_expression()  # Right operand
-
-        # enforce types para di string nagcocompare
-        left = self.cast_to_number(left) if self.is_numeric_string(left) else left
-        right = self.cast_to_number(right) if self.is_numeric_string(right) else right
-
-        # Perform comparison and convert to TROOF
+        right = self.parse_expression()  # Right operand
         if operator == "BOTH SAEM":
-            comparison_result = "WIN" if left == right else "FAIL"
+            return left == right
         elif operator == "DIFFRINT":
-            comparison_result = "WIN" if left != right else "FAIL"
+            return left != right
         else:
-            raise SyntaxError(f"Unexpected comparison operator: {operator}")
-
-        # self.IT = comparison_result  # Update IT with the result
-        # print(comparison_result)
-        return comparison_result
-
-    def is_numeric_string(self, value):
-        """Check if a string can be converted to a number."""
-        try:
-            float(value)  # This will work for both int and float representations
-            return True
-        except ValueError:
-            return False
-
+            raise SyntaxError(f"Unexpected comparison operator: {self.current_token()[0]}")
 
     def parse_literal_or_variable(self):
         """Parse a literal or variable."""
@@ -618,15 +571,7 @@ class Parser:
         elif target_type == "YARN":
             return str(value)
         elif target_type == "TROOF":
-            if isinstance(value, str):
-                if len(value) > 0:
-                    return "WIN"
-                else:
-                    return "FAIL"
-            if value:
-                return "WIN"
-            else:
-                return "FAIL"
+            return value not in [0, "FAIL", False]
         elif target_type == "NOOB":
             return None
         else:
