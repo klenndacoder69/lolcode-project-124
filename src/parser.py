@@ -207,6 +207,8 @@ class Parser:
                 output.append(self.parse_expression())
             elif self.current_token()[1] == "Boolean Operation":
                 output.append(self.parse_expression())
+            elif self.current_token()[1] == "Comparison Operation":
+                output.append(self.parse_expression())
             else:
                 self.consume()
         self.IT = ''.join(map(str, output))
@@ -412,20 +414,6 @@ class Parser:
         else:
             raise SyntaxError(f"Unexpected boolean operator: {operator}")
 
-    def parse_comparison(self):
-        """Parse comparison operations."""
-        operator = self.current_token()[0]
-        self.consume("Comparison Operation")
-        left = self.parse_expression()  # Left operand
-        self.consume("Operator Separator")  # AN
-        right = self.parse_expression()  # Right operand
-        if operator == "BOTH SAEM":
-            return left == right
-        elif operator == "DIFFRINT":
-            return left != right
-        else:
-            raise SyntaxError(f"Unexpected comparison operator: {self.current_token()[0]}")
-
     def parse_literal_or_variable(self):
         """Parse a literal or variable."""
         if self.current_token()[1] == "String Delimiter":
@@ -492,85 +480,31 @@ class Parser:
         else:
             raise ValueError(f"Unknown operator: {operator}")
 
-    # def parse_boolean(self): 2
-    #     """Parse boolean operations."""
-    #     if self.current_token()[0] == "NOT":
-    #         self.consume("Boolean Operation")
-    #         return not self.parse_expression()
-    #     elif self.current_token()[0] in ["BOTH OF", "EITHER OF", "WON OF"]:
-    #         operator = self.current_token()[0]
-    #         self.consume("Boolean Operation")
-    #         left = self.parse_expression()
-    #         self.consume("Operator Separator")  # AN
-    #         right = self.parse_expression()
-    #         if operator == "BOTH OF":
-    #             return left and right
-    #         elif operator == "EITHER OF":
-    #             return left or right
-    #         elif operator == "WON OF":
-    #             return left != right
-    #     elif self.current_token()[0] in ["ALL OF", "ANY OF"]:
-    #         operator = self.current_token()[0]
-    #         self.consume("Boolean Operation")
-    #         values = []
-    #         while self.current_token() and self.current_token()[1] != "Arity Delimiter":
-    #             values.append(self.parse_expression())
-    #             if self.current_token()[1] == "Operator Separator":
-    #                 self.consume("Operator Separator")
-    #         self.consume("Arity Delimiter")  # MKAY
-    #         if operator == "ALL OF":
-    #             return all(values)
-    #         elif operator == "ANY OF":
-    #             return any(values)
-    #     else:
-    #         raise SyntaxError(f"Unexpected token: {self.current_token()[0]}")
+
 
     def parse_comparison(self):
-        """Parse comparison operations."""
+        """Parse comparison operations and set a flag if the right side is nested."""
         operator = self.current_token()[0]
         self.consume("Comparison Operation")
         left = self.parse_expression()
         self.consume("Operator Separator")  # AN
+        next_token = self.current_token()
+        is_right_nested = next_token[1] in {"Arithmetic Operation", "Comparison Operation", "Boolean Operation"}
         right = self.parse_expression()
-        if operator == "BOTH SAEM":
-            return left == right
-        elif operator == "DIFFRINT":
-            return left != right
+        if is_right_nested:
+            if operator == "BOTH SAEM":
+                return "FAIL" if left == right else "WIN"
+            elif operator == "DIFFRINT":
+                return "FAIL" if left != right else "WIN"
+            print("Debug: Right side is nested.")
         else:
-            raise SyntaxError(f"Unexpected comparison operator: {self.current_token()[0]}")
-
-    def parse_literal_or_variable(self):
-        """Parse a literal or variable."""
-        if self.current_token()[1] == "String Delimiter":
-            return self.parse_literal()
-        elif self.current_token()[1] == "Literal":
-            return self.parse_literal()
-        elif self.current_token()[1] == "Variable Identifier":
-            return self.parse_variable()
-        else:
-            raise SyntaxError(f"Unexpected token: {self.current_token()[0]}")
-
-    def parse_literal(self):
-        """Parse a literal which can be either a string or a number."""
-        if self.current_token()[1] == "String Delimiter":
-            self.consume("String Delimiter")
-            literal_value = self.current_token()[0]
-            self.consume("Literal")
-            self.consume("String Delimiter")
-            return literal_value
-        elif self.current_token()[1] == "Literal":
-            literal_value = self.current_token()[0]
-            self.consume("Literal")
-            # Convert the literal to its appropriate type
-            if literal_value.isdigit():
-                return int(literal_value) 
-            try:
-                return float(literal_value)
-            except ValueError:
-                return literal_value
-        else:
-            self.errors.append(f"Unexpected literal at token '{self.current_token()[0]}'.")
-            raise SyntaxError(f"Unexpected literal at token '{self.current_token()[0]}'.")
+            print("Debug: Right side is not nested.")
+            print("debug: ", left, right)
+            if operator == "BOTH SAEM":
+                return "WIN" if left == right else "FAIL"
+            elif operator == "DIFFRINT":
+                return "WIN" if left != right else "FAIL"
+        raise SyntaxError(f"Unexpected comparison operator: {operator}")
 
     def parse_variable(self):
         """Parse and return the value of a variable."""
