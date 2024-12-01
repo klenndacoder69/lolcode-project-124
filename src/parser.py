@@ -207,6 +207,8 @@ class Parser:
                 output.append(self.parse_expression())
             elif self.current_token()[1] == "Comparison Operation":
                 output.append(self.parse_expression())
+            elif self.current_token()[1] == "Boolean Operation":
+                output.append(self.parse_expression())
             else:
                 self.consume()
         self.IT = ''.join(map(str, output))
@@ -367,30 +369,48 @@ class Parser:
         operator = self.current_token()[0]
         self.consume("Boolean Operation")
         if operator == "NOT":
-            return not self.parse_expression()
+            value = self.parse_expression()
+            print("debug: ",value)
+            if self.cast_value(value,"TROOF") == "WIN":
+                return "FAIL"
+            elif self.cast_value(value,"TROOF") == "FAIL":
+                return "WIN"
         left = self.parse_expression()  # Left operand
         self.consume("Operator Separator")  # AN
         right = self.parse_expression()  # Right operand
         if operator == "BOTH OF":
-            return left and right
+            print("debug: ",left,right)
+            if self.cast_value(left,"TROOF") == "WIN" and self.cast_value(right,"TROOF") == "WIN":
+                return "WIN"
+            return "FAIL"
         elif operator == "EITHER OF":
-            return left or right
+            if (self.cast_value(left,"TROOF") == "WIN") or (self.cast_value(right,"TROOF") == "WIN"):
+                return "WIN"
+            return "FAIL"
         elif operator == "WON OF":
-            return left != right
+            if self.cast_value(left,"TROOF") == "WIN" and self.cast_value(right,"TROOF") == "FAIL":
+                return "WIN"
+            elif self.cast_value(left,"TROOF") == "FAIL" and self.cast_value(right,"TROOF") == "WIN":
+                return "WIN"
+            return "FAIL"
         elif operator == "ALL OF":
             values = [left]
             while self.current_token() and self.current_token()[1] != "Arity Delimiter":
                 self.consume("Operator Separator")
                 values.append(self.parse_expression())
             self.consume("Arity Delimiter")  # MKAY
-            return all(values)
+            if "FAIL" in values:
+                return "FAIL"
+            return "WIN"
         elif operator == "ANY OF":
             values = [left]
             while self.current_token() and self.current_token()[1] != "Arity Delimiter":
                 self.consume("Operator Separator")
                 values.append(self.parse_expression())
             self.consume("Arity Delimiter")  # MKAY
-            return any(values)
+            if "WIN" in values:
+                return "WIN"
+            return "FAIL"
         else:
             raise SyntaxError(f"Unexpected boolean operator: {operator}")
 
@@ -514,38 +534,6 @@ class Parser:
         else:
             raise ValueError(f"Unknown operator: {operator}")
 
-    def parse_boolean(self):
-        """Parse boolean operations."""
-        if self.current_token()[0] == "NOT":
-            self.consume("Boolean Operation")
-            return not self.parse_expression()
-        elif self.current_token()[0] in ["BOTH OF", "EITHER OF", "WON OF"]:
-            operator = self.current_token()[0]
-            self.consume("Boolean Operation")
-            left = self.parse_expression()
-            self.consume("Operator Separator")  # AN
-            right = self.parse_expression()
-            if operator == "BOTH OF":
-                return left and right
-            elif operator == "EITHER OF":
-                return left or right
-            elif operator == "WON OF":
-                return left != right
-        elif self.current_token()[0] in ["ALL OF", "ANY OF"]:
-            operator = self.current_token()[0]
-            self.consume("Boolean Operation")
-            values = []
-            while self.current_token() and self.current_token()[1] != "Arity Delimiter":
-                values.append(self.parse_expression())
-                if self.current_token()[1] == "Operator Separator":
-                    self.consume("Operator Separator")
-            self.consume("Arity Delimiter")  # MKAY
-            if operator == "ALL OF":
-                return all(values)
-            elif operator == "ANY OF":
-                return any(values)
-        else:
-            raise SyntaxError(f"Unexpected token: {self.current_token()[0]}")
 
     def parse_literal_or_variable(self):
         """Parse a literal or variable."""
@@ -619,7 +607,11 @@ class Parser:
             return str(value)
         elif target_type == "TROOF":
             if isinstance(value, str):
-                if len(value) > 0:
+                if value == "WIN":
+                    return "WIN"
+                elif value == "FAIL":
+                    return "FAIL"
+                elif len(value) > 0:
                     return "WIN"
                 else:
                     return "FAIL"
