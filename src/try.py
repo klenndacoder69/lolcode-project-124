@@ -131,8 +131,15 @@ class Parser:
 
         if self.current_token() and self.current_token()[1] == "Variable Assignment":  # ITZ
             self.consume("Variable Assignment")
-            value = self.parse_expression()
-            value_type = self.determine_type(value)
+            if self.current_token()[1] == "String Delimiter":
+                self.consume("String Delimiter")
+                value = self.current_token()[0]
+                self.consume("Literal")
+                self.consume("String Delimiter")
+                value_type = "YARN"
+            else:
+                value = self.parse_expression()
+                value_type = self.determine_type(value)
             self.symbol_table[variable_name].update({"type": value_type, "value": value})
 
     def parse_assignment(self):
@@ -152,8 +159,15 @@ class Parser:
                 self.consume("Type Identifier")
                 self.IT = self.cast_value(value, new_type)
             else:
-                value = self.parse_expression()
-                value_type = self.determine_type(value)
+                if self.current_token()[1] == "String Delimiter":
+                    self.consume("String Delimiter")
+                    value = self.current_token()[0]
+                    self.consume("Literal")
+                    self.consume("String Delimiter")
+                    value_type = "YARN"
+                else:
+                    value = self.parse_expression()
+                    value_type = self.determine_type(value)
                 self.symbol_table[variable_name].update({"type": value_type, "value": value})
         elif self.current_token()[1] == "Typecasting":  # IS NOW A
             self.consume("Typecasting")  # IS NOW A
@@ -547,10 +561,12 @@ class Parser:
             return "NUMBR"
         elif isinstance(value, float):
             return "NUMBAR"
-        elif isinstance(value, str):
-            return "YARN"
         elif isinstance(value, bool):
             return "TROOF"
+        elif isinstance(value, str):
+            if value in ["WIN", "FAIL"]:
+                return "TROOF"
+            return "YARN"
         else:
             return "NOOB"
 
