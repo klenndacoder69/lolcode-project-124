@@ -493,9 +493,9 @@ class Parser:
         right = self.parse_expression()
         if is_right_nested:
             if operator == "BOTH SAEM":
-                return "FAIL" if left == right else "WIN"
+                return "WIN" if left == right else "FAIL"
             elif operator == "DIFFRINT":
-                return "FAIL" if left != right else "WIN"
+                return "WIN" if left != right else "FAIL"
             print("Debug: Right side is nested.")
         else:
             print("Debug: Right side is not nested.")
