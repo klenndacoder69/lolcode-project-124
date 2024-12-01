@@ -234,6 +234,7 @@ class Parser:
         print(f"Updating variable '{variable_name}' in symbol table.")
 
         # Store the input value as a string
+        print("The input value is: ", input_value)
         self.symbol_table[variable_name]["value"] = input_value
         self.symbol_table[variable_name]["type"] = "YARN"  # Default type is YARN (string)
 
@@ -486,24 +487,14 @@ class Parser:
         """Parse comparison operations and set a flag if the right side is nested."""
         operator = self.current_token()[0]
         self.consume("Comparison Operation")
-        left = self.parse_expression()
+        left = str(self.parse_expression())
         self.consume("Operator Separator")  # AN
-        next_token = self.current_token()
-        is_right_nested = next_token[1] in {"Arithmetic Operation", "Comparison Operation", "Boolean Operation"}
-        right = self.parse_expression()
-        if is_right_nested:
-            if operator == "BOTH SAEM":
-                return "WIN" if left == right else "FAIL"
-            elif operator == "DIFFRINT":
-                return "WIN" if left != right else "FAIL"
-            print("Debug: Right side is nested.")
-        else:
-            print("Debug: Right side is not nested.")
-            print("debug: ", left, right)
-            if operator == "BOTH SAEM":
-                return "WIN" if left == right else "FAIL"
-            elif operator == "DIFFRINT":
-                return "WIN" if left != right else "FAIL"
+        right = str(self.parse_expression())
+        if operator == "BOTH SAEM":
+            return "WIN" if left == right else "FAIL"
+        elif operator == "DIFFRINT":
+            return "WIN" if left != right else "FAIL"
+    
         raise SyntaxError(f"Unexpected comparison operator: {operator}")
 
     def parse_variable(self):
