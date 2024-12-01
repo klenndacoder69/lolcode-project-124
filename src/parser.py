@@ -575,6 +575,3 @@ class Parser:
         else:
             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
             raise SyntaxError(f"Note: Unexpected self.current_token() '{self.current_token()[0]}'.")
-
-
-
