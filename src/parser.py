@@ -27,7 +27,7 @@ class Parser:
         if self.current_token() is None:
             raise SyntaxError("Unexpected end of input.")
         if expected_type is None or self.current_token()[1] == expected_type:
-            # print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
+            print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
             self.cursor += 1
             return self.current_token()
         raise SyntaxError(f"Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'.")
@@ -49,10 +49,7 @@ class Parser:
                 elif self.current_token()[1] == "Single Line Comment":
                     self.consume("Single Line Comment")
                 elif self.current_token()[1] == "Starting Multiple Line Comment":
-                    self.consume("Starting Multiple Line Comment")
-                    while self.current_token() and self.current_token()[1] != "Ending Multiple Line Comment":
-                        self.consume()
-                    self.consume("Ending Multiple Line Comment")
+                    self.parse_multiline_comment()
                 else:
                     self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
 
@@ -82,27 +79,51 @@ class Parser:
 
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
+        if self.errors:
+            print(self.errors)
+            return None
         return list(zip(variables, values))
 
+    def parse_multiline_comment(self):
+        ''' Parse a multiline comment. '''
+        self.consume("Starting Multiple Line Comment")
+        while self.current_token() and self.current_token()[1] != "Ending Multiple Line Comment":
+            self.consume()
+        self.consume("Ending Multiple Line Comment")
+    
+    def parse_variable_declaration_block(self):
+        ''' Parse a variable declaration block. '''
+        if self.declare_flag:
+            self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+            raise SyntaxError("Error while parsing declare variables. Only one declare variables block is allowed.")
+        self.consume("Starting Declare Variables")
+        self.consume("Linebreak")
+        while self.current_token() and self.current_token()[1] != "Ending Declare Variables":
+            # we limit what we want to consume inside the variable declaration block
+            # the possible tokens are:
+            # Linebreak, Single Line Comment, Variable Declaration, Multiple Line Comment
+            if self.current_token()[1] == "Single Line Comment":
+                self.consume("Single Line Comment")
+            elif self.current_token()[1] == "Starting Multiple Line Comment":
+                self.parse_multiline_comment()
+            elif self.current_token()[1] == "Linebreak":
+                self.consume("Linebreak")
+            elif self.current_token()[1] == "Variable Declaration":
+                self.parse_variable_declaration()
+        self.consume("Ending Declare Variables")
+        self.consume("Linebreak")
+        self.declare_flag = True
+        
     def parse_statement(self):
         """Handle a single statement."""
         token_type = self.current_token()[1]
 
         if token_type == "Linebreak":
             self.consume("Linebreak")
-
+        
         # check for the starting of a variable declaration
         elif token_type == "Starting Declare Variables":
-            if self.declare_flag:
-                self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-                raise SyntaxError("Error while parsing declare variables. Only one declare variables block is allowed.")
-            self.consume("Starting Declare Variables")
-            self.consume("Linebreak")
-            while self.current_token() and self.current_token()[1] != "Ending Declare Variables":
-                self.parse_variable_declaration()
-            self.consume("Ending Declare Variables")
-            self.consume("Linebreak")
-            self.declare_flag = True
+            self.parse_variable_declaration_block()
 
         elif token_type == "Variable Identifier":
             # we need self.IT for checking conditions later (specifically in WTF?)
@@ -146,11 +167,8 @@ class Parser:
             self.consume("Ending Multiple Line Comment")
 
         else:
-            if self.current_token()[1] == "Variable Declaration" and self.declare_flag == True:
-                raise SyntaxError("Error while parsing variable declaration. Declarations must be inside declare variables block.")
             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-            self.consume()
-
+            raise SyntaxError("Error while parsing statement.")
     def parse_variable_declaration(self):
         """Parse a variable declaration."""
         self.consume("Variable Declaration")  # I HAS A
