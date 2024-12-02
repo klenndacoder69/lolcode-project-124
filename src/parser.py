@@ -25,7 +25,7 @@ class Parser:
         if self.current_token() is None:
             raise SyntaxError("Unexpected end of input.")
         if expected_type is None or self.current_token()[1] == expected_type:
-            print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
+            # print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
             self.cursor += 1
             return self.current_token()
         raise SyntaxError(f"Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'.")
@@ -261,23 +261,30 @@ class Parser:
         self.consume("Conditional Statement")  # O RLY?
         self.consume("Linebreak")
         condition = self.IT
+        print(condition)
 
         if self.current_token()[0] == "YA RLY":
             self.consume("Conditional Statement")
             self.consume("Linebreak")
-            if condition:
+            if condition == "WIN":
                 while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
                     self.parse_statement()
             else:
-                while self.current_token() and self.current_token()[0] != "NO WAI":
+                # if condition is not met, then we directly go to NO WAI, or if there is NO WAI then go until OIC
+                while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
                     self.consume()
-        if self.current_token()[0] == "NO WAI":
-            self.consume("Conditional Statement")
-            self.consume("Linebreak")
-            if not condition:
-                while self.current_token() and self.current_token()[0] != "OIC":
-                    self.parse_statement()
-        self.consume("Conditional Statement")  # OIC
+                if self.current_token() and self.current_token()[0] == "NO WAI":
+                    self.consume("Conditional Statement")
+                    self.consume("Linebreak")
+                    while self.current_token() and self.current_token()[0] != "OIC":
+                        self.parse_statement()
+                if self.current_token() and self.current_token()[0] == "OIC":
+                    self.consume("Conditional Statement")
+                    self.consume("Linebreak")
+        else:
+            raise SyntaxError("YA RLY expected in an if-else conditional.")
+
+        
 
     def parse_loop(self):
         """Parse a loop construct (IM IN YR)."""
