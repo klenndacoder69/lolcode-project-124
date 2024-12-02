@@ -348,26 +348,42 @@ class Parser:
             print("umabot ka ba dito plspls")
             print(self.cursor)
             condition_cursor = self.cursor
-            condition = self.parse_expression()
+            condition = self.parse_expression() # di ata kelangan iparse to (?) kahit consume na lang siguro
             print(f"condition: {condition}") 
 
             
         while True:
+            print("ITERATION LODS HAFDFHADSAFSD")
             # iccheck condition every time magloop 
             if condition_type == "WILE":
+
                 temp = self.cursor # store current location of cursor para makabalik
                 self.cursor = condition_cursor #temporarily put cursor here to parse expression
                 result = self.parse_expression()
                 if result == "FAIL":
                     break
-                else:
-                    self.cursor = temp
+                self.cursor = temp
+            
+            elif condition_type == "TIL":
+                temp = self.cursor
+                self.cursor = condition_cursor
+                result = self.parse_expression()
+                if result == "WIN":
+                    break
+                self.cursor = temp
+
+
             while self.current_token() and self.current_token()[1] != "Loop End":
                 # print(f"debug: current token: {self.current_token}")
                 if self.current_token()[1] == "Linebreak":
                     self.consume("Linebreak")
                 else:
                     self.parse_statement()
+            
+            if operation == "UPPIN":
+                self.symbol_table[variable]["value"] += 1
+            elif operation == "NERFIN":
+                self.symbol_table[variable]["value"]
             self.symbol_table[variable]["value"] += 1 if operation == "UPPIN" else -1
 
         self.consume("Loop End")  # IM OUTTA YR
@@ -520,7 +536,7 @@ class Parser:
 
     def perform_arithmetic(self, left, right, operator):
         """Perform arithmetic based on the operator."""
-        print("this is ",right)
+        # print("this is ",right)
         if type(left) == str or type(left) == bool:
             left = self.cast_to_number(left)
         if type(right) == str or type(right) == bool:
