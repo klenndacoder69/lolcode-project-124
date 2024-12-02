@@ -647,15 +647,6 @@ class Parser:
             except ValueError:
                 raise TypeError(f"Cannot cast value to number: {value}")
 
-    def evaluate_loop_condition(self, variable, operation, condition, condition_type):
-        """Evaluate loop conditions (TIL or WILE)."""
-        value = self.symbol_table[variable]["value"]
-        if condition_type == "TIL":
-            return value != condition
-        elif condition_type == "WILE":
-            return value == condition
-        return True
-
     def parse_smoosh(self):
         """Parse and execute a SMOOSH statement."""
         self.consume("String Concatenation")  # SMOOSH
