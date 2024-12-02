@@ -25,7 +25,7 @@ class Parser:
         if self.current_token() is None:
             raise SyntaxError("Unexpected end of input.")
         if expected_type is None or self.current_token()[1] == expected_type:
-            print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
+            # print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
             self.cursor += 1
             return self.current_token()
         raise SyntaxError(f"Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'.")
@@ -290,104 +290,54 @@ class Parser:
         else:
             raise SyntaxError("YA RLY expected in an if-else conditional.")
 
-    # def parse_loop(self):
-    #     print("putanginansgaasggsa")
-    #     """Parse a loop construct (IM IN YR)."""
-    #     self.consume("Loop Start")  # IM IN YR
-    #     label = self.current_token()[0]
-    #     print(f"label: {label}")
-    #     self.consume("Variable Identifier")
-    #     operation = self.current_token()[0]  # UPPIN or NERFIN
-    #     self.consume("Loop Operation")
-    #     self.consume("Construct")  # YR
-    #     variable = self.current_token()[0]
-    #     print(f"variable: {variable}")
-    #     self.consume("Variable Identifier")
-    #     condition = None
-
-    #     print("umabot ka dito")
-    #     if self.current_token()[1] == "Loop Statement":  # TIL or WILE
-    #         condition_type = self.current_token()[0]
-    #         self.consume("Loop Statement")
-    #         print("umabot ka ba dito plspls")
-    #         condition = self.parse_expression()
-    #         print(f"condition: {condition}") 
-
-    #     print("you are here")
-    #     while self.evaluate_loop_condition(variable, operation, condition, condition_type):
-            
-    #         while self.current_token() and self.current_token()[1] != "Loop End":
-    #             print(f"debug: current token: {self.current_token}")
-    #             if self.current_token()[1] == "Linebreak":
-    #                 self.consume("Linebreak")
-    #             else:
-    #                 self.parse_statement()
-    #         self.symbol_table[variable]["value"] += 1 if operation == "UPPIN" else -1
-
-    #     self.consume("Loop End")  # IM OUTTA YR
-    #     self.consume("Variable Identifier")  # Label
-
     def parse_loop(self):
-        print("putanginansgaasggsa")
         """Parse a loop construct (IM IN YR)."""
         self.consume("Loop Start")  # IM IN YR
         label = self.current_token()[0]
-        print(f"label: {label}")
         self.consume("Variable Identifier")
         operation = self.current_token()[0]  # UPPIN or NERFIN
         self.consume("Loop Operation")
         self.consume("Construct")  # YR
-        variable = self.current_token()[0]
+        variable = self.current_token()[0] # num2
         print(f"variable: {variable}")
         self.consume("Variable Identifier")
-        condition = None
 
+        # loop statement is optional (til or wile)
         if self.current_token()[1] == "Loop Statement":
             condition_type = self.current_token()[0] # TIL OR WILE
             self.consume("Loop Statement")
-            print("umabot ka ba dito plspls")
-            print(self.cursor)
             condition_cursor = self.cursor
-            condition = self.parse_expression() # di ata kelangan iparse to (?) kahit consume na lang siguro
-            print(f"condition: {condition}") 
+            self.parse_expression() # di ata kelangan iparse to (?) kahit consume na lang siguro
 
             
         while True:
-            print("ITERATION LODS HAFDFHADSAFSD")
             # iccheck condition every time magloop 
+            self.cursor = condition_cursor #temporarily put cursor here to parse expression
             if condition_type == "WILE":
-
-                temp = self.cursor # store current location of cursor para makabalik
-                self.cursor = condition_cursor #temporarily put cursor here to parse expression
                 result = self.parse_expression()
                 if result == "FAIL":
+                    # we consume until we go to the end (since we backtracked)
+                    while self.current_token() and self.current_token()[1] != "Loop End":
+                        self.consume()
                     break
-                self.cursor = temp
             
             elif condition_type == "TIL":
-                temp = self.cursor
-                self.cursor = condition_cursor
                 result = self.parse_expression()
                 if result == "WIN":
+                    # we consume until we go to the end (since we backtracked)
+                    while self.current_token() and self.current_token()[1] != "Loop End":
+                        self.consume()
                     break
-                self.cursor = temp
 
-
+            print("ito yung cursor mo after mo gawen yung wile til: ", self.current_token())
             while self.current_token() and self.current_token()[1] != "Loop End":
-                # print(f"debug: current token: {self.current_token}")
-                if self.current_token()[1] == "Linebreak":
-                    self.consume("Linebreak")
-                else:
-                    self.parse_statement()
-            
+                self.parse_statement()
             if operation == "UPPIN":
-                self.symbol_table[variable]["value"] += 1
+                self.symbol_table[variable].update({"value": self.symbol_table[variable]["value"] + 1})
             elif operation == "NERFIN":
-                self.symbol_table[variable]["value"]
-            self.symbol_table[variable]["value"] += 1 if operation == "UPPIN" else -1
-
+                self.symbol_table[variable].update({"value": self.symbol_table[variable]["value"] - 1})
         self.consume("Loop End")  # IM OUTTA YR
-        self.consume("Variable Identifier")  # Label
+        self.consume("Variable Identifier")  # ll
 
 
     def parse_function(self):
