@@ -13,6 +13,7 @@ class Parser:
         self.symbol_table = {}
         self.IT = None  # Special key to hold the most recent VISIBLE output
         self.output_callback = output_callback
+        self.declare_flag = False
 
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
@@ -90,8 +91,18 @@ class Parser:
         if token_type == "Linebreak":
             self.consume("Linebreak")
 
-        elif token_type == "Variable Declaration":
-            self.parse_variable_declaration()
+        # check for the starting of a variable declaration
+        elif token_type == "Starting Declare Variables":
+            if self.declare_flag:
+                self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+                raise SyntaxError("Error while parsing declare variables. Only one declare variables block is allowed.")
+            self.consume("Starting Declare Variables")
+            self.consume("Linebreak")
+            while self.current_token() and self.current_token()[1] != "Ending Declare Variables":
+                self.parse_variable_declaration()
+            self.consume("Ending Declare Variables")
+            self.consume("Linebreak")
+            self.declare_flag = True
 
         elif token_type == "Variable Identifier":
             # we need self.IT for checking conditions later (specifically in WTF?)
@@ -135,6 +146,9 @@ class Parser:
             self.consume("Ending Multiple Line Comment")
 
         else:
+            if self.current_token()[1] == "Variable Declaration" and self.declare_flag == True:
+                raise SyntaxError("Error while parsing variable declaration. Declarations must be inside declare variables block.")
+            self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
             self.consume()
 
     def parse_variable_declaration(self):
