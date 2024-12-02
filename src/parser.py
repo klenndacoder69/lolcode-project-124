@@ -39,6 +39,8 @@ class Parser:
 
     def parse_program(self):
         """Parse the entire program."""
+        variables = []
+        values = []
         try:
             # Handle comments outside Starting Program
             while self.current_token():
@@ -64,8 +66,7 @@ class Parser:
 
             print("Program is syntactically correct.")
             print("Final Symbol Table:")
-            variables = []
-            values = []
+            
             for var, attributes in self.symbol_table.items():
                 print(f"{var}: {attributes}")
             variables.append('IT')
@@ -317,7 +318,7 @@ class Parser:
         self.consume("Conditional Statement")  # O RLY?
         self.consume("Linebreak")
         condition = self.IT
-        print(condition)
+        print("this is cond",condition)
 
         if self.current_token()[0] == "YA RLY":
             self.consume("Conditional Statement")
@@ -325,6 +326,15 @@ class Parser:
             if condition == "WIN":
                 while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
                     self.parse_statement()
+                    if self.current_token() and self.current_token()[0] == "NO WAI" or self.current_token() and self.current_token()[0] == "OIC":
+                        break
+                # Skip NO WAI
+                if self.current_token() and self.current_token()[0] == "NO WAI":
+                    while self.current_token() and self.current_token()[0] != "OIC":
+                        self.consume()
+                # Still consume the OIC         
+                self.consume("Conditional Statement")
+                self.consume("Linebreak")
             else:
                 # if condition is not met, then we directly go to NO WAI, or if there is NO WAI then go until OIC
                 while self.current_token() and self.current_token()[0] not in ["NO WAI", "OIC"]:
