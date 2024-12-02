@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import simpledialog
 
 class Parser:
-    def __init__(self, lexemes):
+    def __init__(self, lexemes,  output_callback=None):
         """
         Initialize the syntax analyzer with the lexemes.
         lexemes: List of tuples, where each tuple contains a lexeme and its classification.
@@ -12,6 +12,7 @@ class Parser:
         self.errors = []
         self.symbol_table = {}
         self.IT = None  # Special key to hold the most recent VISIBLE output
+        self.output_callback = output_callback
 
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
@@ -65,12 +66,22 @@ class Parser:
 
             print("Program is syntactically correct.")
             print("Final Symbol Table:")
+            variables = []
+            values = []
             for var, attributes in self.symbol_table.items():
                 print(f"{var}: {attributes}")
-
+            variables.append('IT')
+            values.append(self.IT)
+            for var, attributes in self.symbol_table.items():
+                value = attributes.get('value')
+                variables.append(var)
+                values.append(value)
+                print(f"{var}: {value}")
+            print(variables,values)
 
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
+        return list(zip(variables, values))
 
     def parse_statement(self):
         """Handle a single statement."""
@@ -130,7 +141,7 @@ class Parser:
         """Parse a variable declaration."""
         self.consume("Variable Declaration")  # I HAS A
         variable_name = self.current_token()[0]
-        self.symbol_table[variable_name] = {"type": "NOOB", "value": None}
+        self.symbol_table[variable_name] = {"type": "NOOB", "value": "NOOB"}
         self.consume("Variable Identifier")
 
         if self.current_token() and self.current_token()[1] == "Variable Assignment":  # ITZ
@@ -217,8 +228,12 @@ class Parser:
                 output.append(self.parse_expression())
             else:
                 self.consume()
+            if self.current_token() and self.current_token()[1] != "Linebreak":
+                output.append(" ")
         self.IT = ''.join(map(str, output))
         print(f"VISIBLE: {self.IT}")
+        if self.output_callback:
+            self.output_callback(self.IT)
         self.consume("Linebreak")
 
     def parse_input(self):
