@@ -52,7 +52,7 @@ class Parser:
                     self.parse_multiline_comment()
                 else:
                     self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
-
+                    raise SyntaxError("Error while parsing program.")
             self.consume("Starting Program")  # HAI
             self.check_for_valid_inline_comments()
             self.consume("Linebreak")
