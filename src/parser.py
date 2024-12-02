@@ -463,8 +463,11 @@ class Parser:
 
     def perform_arithmetic(self, left, right, operator):
         """Perform arithmetic based on the operator."""
-        left = self.cast_to_number(left)
-        right = self.cast_to_number(right)
+        print("this is ",right)
+        if type(left) == str or type(left) == bool:
+            left = self.cast_to_number(left)
+        if type(right) == str or type(right) == bool:
+            right = self.cast_to_number(right)
         # Ensure that left and right are numbers
         if isinstance(left, str):
             try:
@@ -472,6 +475,7 @@ class Parser:
             except ValueError:
                 raise TypeError(f"Invalid operand type for arithmetic: {left}")
         if isinstance(right, str):
+            print("inside here")
             try:
                 right = float(right) if '.' in right else int(right)
             except ValueError:
