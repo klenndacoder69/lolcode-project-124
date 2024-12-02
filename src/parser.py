@@ -68,7 +68,6 @@ class Parser:
             for var, attributes in self.symbol_table.items():
                 print(f"{var}: {attributes}")
 
-            print(f"Value of IT: {self.IT}")
 
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
@@ -84,7 +83,8 @@ class Parser:
             self.parse_variable_declaration()
 
         elif token_type == "Variable Identifier":
-            self.parse_assignment()
+            # we need self.IT for checking conditions later (specifically in WTF?)
+            self.IT = self.parse_assignment()
 
         elif token_type == "Output Keyword":
             self.parse_visible()
@@ -96,10 +96,14 @@ class Parser:
             self.parse_typecasting()
 
         elif token_type in ["Arithmetic Operation", "Boolean Operation", "Comparison Operation", "SMOOSH"]:
+            # we need self.IT for checking conditions later
             self.IT = self.parse_expression()
 
         elif token_type == "Conditional Statement":
             self.parse_conditional()
+
+        elif token_type == "Case Statement":
+            self.parse_case()
 
         elif token_type == "Loop Start":
             self.parse_loop()
@@ -182,6 +186,8 @@ class Parser:
             self.consume("Type Identifier")
             self.symbol_table[variable_name]["type"] = new_type
             self.symbol_table[variable_name]["value"] = self.cast_value(self.symbol_table[variable_name]["value"], new_type)
+        
+        return self.symbol_table[variable_name]["value"]
 
     def parse_visible(self):
         """Parse and execute a VISIBLE statement."""
@@ -512,6 +518,48 @@ class Parser:
         self.consume("Variable Identifier")
         return self.symbol_table[var_name]["value"]
 
+    def parse_case(self):
+        """Parse a case block."""
+        omgwtf_flag = False
+        condition = self.IT
+        self.consume("Case Statement") # WTF?
+        self.consume("Linebreak")
+        while self.current_token():
+            flag = False # reset the flag, so other cases will be checked
+            if self.current_token()[0] == "OMG":
+
+                self.consume("Case Statement") # OMG 
+                # we get the literal to compare with condition
+                switch_case = self.parse_literal() # no. (e.g: OMG 1, OMG 2, OMG 3...)
+                if condition == switch_case:
+                    omgwtf_flag = True # if there is a time that one OMG switch case got true, then we set the flag to true
+                # if the literal is the same as the condition
+                self.consume("Linebreak")
+                while self.current_token() and self.current_token()[0] not in ["GTFO", "OMGWTF"]:
+                    if condition == switch_case:
+                        self.parse_statement()
+                    else:
+                        self.consume()
+                if self.current_token() and self.current_token()[0] == "OMGWTF": # serves as the wildcard (e.g: _)
+                    self.consume("Case Statement")
+                    self.consume("Linebreak")
+                    # contents inside OMGWTF
+                    while self.current_token() and self.current_token()[0] != "OIC":
+                        # if one of the cases has been successfully executed, then we do not need to execute OMGWTF (default case)
+                        if omgwtf_flag:
+                            self.consume()
+                        else:
+                            self.parse_statement()
+                    self.consume("Conditional Statement")
+                    self.consume("Linebreak")
+                    # we now get out of the codeblock if we encountered OIC
+                    return
+                # if token is not OMGWTF, or it is a normal OMG and Literal Combination (with a GTFO delimiter)
+                self.consume("Break/Return")
+                self.consume("Linebreak")
+            else:
+                raise SyntaxError("Error while parsing case statement. Expected 'OMG'.")
+                
     def determine_type(self, value):
         """Determine the LOLCode type of a value."""
         if isinstance(value, int):
