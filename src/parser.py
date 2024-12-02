@@ -316,8 +316,6 @@ class Parser:
                 if self.current_token() and self.current_token()[0] == "OIC":
                     self.consume("Conditional Statement")
                     self.consume("Linebreak")
-        else:
-            raise SyntaxError("YA RLY expected in an if-else conditional.")
 
     def parse_loop(self):
         """Parse a loop construct (IM IN YR)."""
