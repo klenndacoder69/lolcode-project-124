@@ -225,7 +225,7 @@ class InterpreterApp:
         # GET LEXEMES AND FILL TABLE
         self.fill_table(get_lexemes(self.lines)) # CHANGE FUNCTION CALL CAN USE IMPORT TO NOT 
         print(get_lexemes(self.lines))
-        Parser(get_lexemes(self.lines)).parse_program()
+        self.fill_symbol_table(Parser(get_lexemes(self.lines)).parse_program())
 
     def fill_table(self, lexemes):
         # CLEAR TABLE
@@ -235,6 +235,15 @@ class InterpreterApp:
         # ASSIGN NEW DATA
         for item in lexemes:
             self.list_tokens_table.insert("", "end", values=(item[0], item[1]))
+    
+    def fill_symbol_table(self,symbol_table):
+        # CLEAR TABLE
+        for row in self.symbol_table.get_children():
+            self.symbol_table.delete(row)
+        
+        # ASSIGN NEW DATA
+        for item in symbol_table:
+            self.symbol_table.insert("", "end", values=(item[0],item[1]))
 
 # CREATE AND RUN THE APP
 root = tk.Tk()

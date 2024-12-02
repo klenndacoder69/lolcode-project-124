@@ -65,9 +65,19 @@ class Parser:
 
             print("Program is syntactically correct.")
             print("Final Symbol Table:")
+            variables = []
+            values = []
             for var, attributes in self.symbol_table.items():
                 print(f"{var}: {attributes}")
-
+            variables.append('IT')
+            values.append(self.IT)
+            for var, attributes in self.symbol_table.items():
+                value = attributes.get('value')
+                variables.append(var)
+                values.append(value)
+                print(f"{var}: {value}")
+            print(variables,values)
+            return list(zip(variables,values))
 
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
@@ -130,7 +140,7 @@ class Parser:
         """Parse a variable declaration."""
         self.consume("Variable Declaration")  # I HAS A
         variable_name = self.current_token()[0]
-        self.symbol_table[variable_name] = {"type": "NOOB", "value": None}
+        self.symbol_table[variable_name] = {"type": "NOOB", "value": "NOOB"}
         self.consume("Variable Identifier")
 
         if self.current_token() and self.current_token()[1] == "Variable Assignment":  # ITZ
@@ -217,6 +227,8 @@ class Parser:
                 output.append(self.parse_expression())
             else:
                 self.consume()
+            if self.current_token() and self.current_token()[1] != "Linebreak":
+                output.append(" ")
         self.IT = ''.join(map(str, output))
         print(f"VISIBLE: {self.IT}")
         self.consume("Linebreak")
@@ -646,15 +658,6 @@ class Parser:
                 return float(value)
             except ValueError:
                 raise TypeError(f"Cannot cast value to number: {value}")
-
-    def evaluate_loop_condition(self, variable, operation, condition, condition_type):
-        """Evaluate loop conditions (TIL or WILE)."""
-        value = self.symbol_table[variable]["value"]
-        if condition_type == "TIL":
-            return value != condition
-        elif condition_type == "WILE":
-            return value == condition
-        return True
 
     def parse_smoosh(self):
         """Parse and execute a SMOOSH statement."""
