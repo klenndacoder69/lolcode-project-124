@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import simpledialog
 
 class Parser:
-    def __init__(self, lexemes):
+    def __init__(self, lexemes,  output_callback=None):
         """
         Initialize the syntax analyzer with the lexemes.
         lexemes: List of tuples, where each tuple contains a lexeme and its classification.
@@ -12,6 +12,7 @@ class Parser:
         self.errors = []
         self.symbol_table = {}
         self.IT = None  # Special key to hold the most recent VISIBLE output
+        self.output_callback = output_callback
 
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
@@ -77,10 +78,10 @@ class Parser:
                 values.append(value)
                 print(f"{var}: {value}")
             print(variables,values)
-            return list(zip(variables,values))
 
         except SyntaxError as e:
             print(f"Syntax Error: {e}")
+        return list(zip(variables, values))
 
     def parse_statement(self):
         """Handle a single statement."""
@@ -231,6 +232,8 @@ class Parser:
                 output.append(" ")
         self.IT = ''.join(map(str, output))
         print(f"VISIBLE: {self.IT}")
+        if self.output_callback:
+            self.output_callback(self.IT)
         self.consume("Linebreak")
 
     def parse_input(self):

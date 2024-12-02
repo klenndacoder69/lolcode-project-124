@@ -3,6 +3,7 @@ from tkinter import Scrollbar, filedialog, messagebox, ttk
 import os
 from lexemes import get_lexemes
 from parser import Parser
+
 class InterpreterApp:
     def __init__(self, root):
         self.root = root
@@ -169,9 +170,6 @@ class InterpreterApp:
         self.symbol_table.tag_configure("custom_font", font=("Helvetica", 12))
         self.symbol_table.grid(row=0, column=0, sticky="nsew")
 
-
-
-
         # ROW 3 : EXECUTE/RUN BUTTON
         self.row3 = tk.Frame(self.main_frame, bg="white")
         self.row3.grid(row=2, column=0, columnspan=3, padx=3, pady=3, sticky="nsew")
@@ -187,6 +185,21 @@ class InterpreterApp:
         # ROW 4 : CONSOLE
         self.row4 = tk.Frame(self.main_frame, bg="white")
         self.row4.grid(row=3, column=0, columnspan=3, padx=3, pady=3, sticky="nsew")
+
+            # TEXT FIELD: CONSOLE
+        self.console = tk.Text(self.row4, font=('Helvetica', 10), height=15, width=100, bg=self.field_bg_color, state=tk.DISABLED)
+        self.console.grid(row=0, column=0, sticky="nsew")
+
+            # SCROLLBAR SET-UP
+        self.console_scroll = Scrollbar(self.row4, command=self.console.yview)
+        self.console_scroll.grid(row=0, column=1, sticky='ns')
+
+            # ATTACH SCROLLBAR TO CONSOLE
+        self.console.config(yscrollcommand=self.console_scroll.set)
+
+        self.row4.grid_rowconfigure(0, weight=1)
+        self.row4.grid_columnconfigure(0, weight=1)
+        self.row4.grid_columnconfigure(1, weight=0)
 
     def import_file(self):
         # OPEN FILE DIALOG
@@ -209,6 +222,19 @@ class InterpreterApp:
         self.text_editor.insert('1.0', input)
 
     def execute(self):
+         # CLEAR THE CONSOLE
+        self.console.config(state=tk.NORMAL)
+        self.console.delete(1.0, tk.END)
+        self.console.config(state=tk.DISABLED)
+
+        # CLEAR THE SYMBOL TABLE
+        for row in self.symbol_table.get_children():
+            self.symbol_table.delete(row)
+
+        # CLEAR THE LEXEMES TABLE
+        for row in self.list_tokens_table.get_children():
+            self.list_tokens_table.delete(row)
+
         # RESET LINES
         self.lines = []
 
@@ -223,9 +249,15 @@ class InterpreterApp:
         self.lines = list(filter(None, self.lines))
 
         # GET LEXEMES AND FILL TABLE
-        self.fill_table(get_lexemes(self.lines)) # CHANGE FUNCTION CALL CAN USE IMPORT TO NOT 
-        print(get_lexemes(self.lines))
-        self.fill_symbol_table(Parser(get_lexemes(self.lines)).parse_program())
+        lexemes = get_lexemes(self.lines)
+        self.fill_table(lexemes)
+
+        # PARSE LEXEMES
+        parser = Parser(lexemes, self.update_console)
+        symbol_table = parser.parse_program()
+
+        # Fill the table with the symbol table data
+        self.fill_symbol_table(symbol_table)
 
     def fill_table(self, lexemes):
         # CLEAR TABLE
@@ -244,6 +276,12 @@ class InterpreterApp:
         # ASSIGN NEW DATA
         for item in symbol_table:
             self.symbol_table.insert("", "end", values=(item[0],item[1]))
+    
+    def update_console(self, message):
+        self.console.config(state=tk.NORMAL)
+        self.console.insert(tk.END, message + "\n")
+        self.console.config(state=tk.DISABLED)
+        self.console.see(tk.END)
 
 # CREATE AND RUN THE APP
 root = tk.Tk()
