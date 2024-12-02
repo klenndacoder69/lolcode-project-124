@@ -165,12 +165,12 @@ def tokenize_and_match(line):
                     x = slice(1,-1)
 
                     # Note: To avoid confusion, we just appended the strings containing the token and its classifications inside the matched_tokens array
-                    matched_tokens.append(f"Lexeme: {token[x]} -> Classification: {category}")
+                    matched_tokens.append(f"Lexeme` {token[x]} -> Classification` {category}")
                     matched = True
                     break
                 
                     # If it is not a string literal, it immediately appends
-                matched_tokens.append(f"Lexeme: {token} -> Classification: {category}")
+                matched_tokens.append(f"Lexeme` {token} -> Classification` {category}")
                 matched = True
                 break  # Stop checking once a match is found
 
@@ -185,18 +185,18 @@ def tokenize_and_match(line):
         # The sole purpose of this for loop is to check whether the matched tokens are function/loop identifiers
     for matched_token in matched_tokens:
         if next_token_is_loop_id:
-            final_tokens.append(f"Lexeme: {matched_token.split(":")[1].strip()} : Loop Identifier")
+            final_tokens.append(f"Lexeme` {matched_token.split("`")[1].strip()} ` Loop Identifier")
             next_token_is_loop_id = False
             continue
         if next_token_is_fnc_id:
-            final_tokens.append(f"Lexeme: {matched_token.split(":")[1].strip()} : Function Identifier")
+            final_tokens.append(f"Lexeme` {matched_token.split("`")[1].strip()} ` Function Identifier")
             next_token_is_fnc_id = False
             continue
         if '_multiword_' in matched_token:
 
                 #   We extract placeholder
                 #   e.g: ['Lexeme', ' _multiword_1 -> Classification', ' Arithmetic Operation']
-            placeholder = matched_token.split(":")[1].strip() 
+            placeholder = matched_token.split("`")[1].strip() 
 
                 # Get placeholder (_multiword_1)
             placeholder = placeholder.split()[0]
@@ -211,7 +211,7 @@ def tokenize_and_match(line):
                             next_token_is_fnc_id = True
                         elif category == "Loop Delimeter":
                             next_token_is_loop_id = True
-                        final_tokens.append(f"Lexeme: {orig_phrase} -> Classification : {category}")
+                        final_tokens.append(f"Lexeme` {orig_phrase} -> Classification ` {category}")
                         break
             else: 
                 final_tokens.append(matched_token)
@@ -224,8 +224,8 @@ def tokenize_and_match(line):
         # Split the token into lexeme and classification
         # Note: In case you want to see, or get the strings (e.g: Lexeme: NOOB -> Classification: Lmao), you can access these using final_token
         parts = final_token.split(" -> ")
-        lexeme = parts[0].split(":")[1].strip()
-        classification = parts[1].split(":")[1].strip()
+        lexeme = parts[0].split("`")[1].strip()
+        classification = parts[1].split("`")[1].strip()
         line_lexemes.append(lexeme)
         line_classifications.append(classification)
     line_lexemes.append("\n")
