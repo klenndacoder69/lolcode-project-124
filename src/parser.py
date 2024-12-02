@@ -555,7 +555,7 @@ class Parser:
 
                 self.consume("Case Statement") # OMG 
                 # we get the literal to compare with condition
-                switch_case = self.parse_literal() # no. (e.g: OMG 1, OMG 2, OMG 3...)
+                switch_case = str(self.parse_literal()) # no. (e.g: OMG 1, OMG 2, OMG 3...)
                 if condition == switch_case:
                     omgwtf_flag = True # if there is a time that one OMG switch case got true, then we set the flag to true
                 # if the literal is the same as the condition
