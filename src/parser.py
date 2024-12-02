@@ -110,6 +110,9 @@ class Parser:
                 self.consume("Linebreak")
             elif self.current_token()[1] == "Variable Declaration":
                 self.parse_variable_declaration()
+            else:
+                self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
+                raise SyntaxError("Error while parsing declare variables. Only variable declarations are allowed.")
         self.consume("Ending Declare Variables")
         self.consume("Linebreak")
         self.declare_flag = True
