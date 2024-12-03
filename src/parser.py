@@ -14,7 +14,8 @@ class Parser:
         self.IT = None  # Special key to hold the most recent VISIBLE output
         self.output_callback = output_callback
         self.declare_flag = False
-
+        self.list_of_functions = []
+        self.function_locations = {}
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
         return self.lexemes[self.cursor] if self.cursor < len(self.lexemes) else None
@@ -66,11 +67,11 @@ class Parser:
 
             print("Program is syntactically correct.")
             print("Final Symbol Table:")
-            
             for var, attributes in self.symbol_table.items():
                 print(f"{var}: {attributes}")
-            variables.append('IT')
-            values.append(self.IT)
+            if 'IT'not in self.symbol_table:
+                variables.append('IT')
+                values.append(self.IT)
             for var, attributes in self.symbol_table.items():
                 value = attributes.get('value')
                 variables.append(var)
@@ -254,6 +255,7 @@ class Parser:
                 output.append(self.current_token()[0])
                 self.consume("Literal")
             elif self.current_token()[1] == "Variable Identifier":
+                print("this is the current token",self.current_token()[0])
                 output.append(self.symbol_table[self.current_token()[0]]["value"])
                 self.consume("Variable Identifier")
             elif self.current_token()[1] == "Arithmetic Operation":
@@ -398,15 +400,19 @@ class Parser:
         self.consume("Variable Identifier")  # ll
 
 
-    def parse_function(self):
+    def parse_function(self): # JUST USE THIS FOR DECLARATOIN OF FUNCTION BECAUSE IT SKIPS THE PARSE STATEMENTS WITHIN THE FUNCTION (ONLY GETS THE FUNCTION NAME AND PARAMETERS)
         """Parse a function definition (HOW IZ I)."""
+        # print("this is the current value of cursor",self.cursor) TRACKERS
         self.consume("Function Start")  # HOW IZ I
         function_name = self.current_token()[0]
+        self.function_locations[function_name] = self.cursor - 1
+        # print("this is the function locations",self.function_locations) TRACKERS
         self.consume("Variable Identifier")
         parameters = []
         if self.current_token()[1] == "Construct":
             self.consume("Construct")
             parameters.append(self.current_token()[0])
+            print("this is ",parameters)
             self.consume("Variable Identifier")
             while self.current_token()[1] == "Operator Separator":
                 self.consume("Operator Separator")
@@ -414,10 +420,35 @@ class Parser:
                 parameters.append(self.current_token()[0])
                 self.consume("Variable Identifier")
         self.consume("Linebreak")
+        # STORE THE FUNCTION LOCATION
         while self.current_token() and self.current_token()[1] != "Function End":
-            self.parse_statement()
+            self.consume()
         self.consume("Function End")  # IF U SAY SO
+        function_holder = {function_name: {param: None for param in parameters}}
+        self.list_of_functions.append(function_holder)
+        print("this is the list of functions",self.list_of_functions)
 
+    
+    def get_function_parameters(self, function_name):
+        """Get the parameters of a function by its name."""
+        for function in self.list_of_functions:
+            if function_name in function:
+                return function[function_name]
+        return None
+
+    # CHECK IF FUNCTION CALL IS VALID
+    def check_function_call(self, function_name, args):
+        """Check if the function call is valid."""
+        parameters = self.get_function_parameters(function_name)
+        if parameters is None:
+            print(f"Function '{function_name}' not found.")
+            return False
+        if len(args) != len(parameters):
+            print(f"Function '{function_name}' expects {len(parameters)} arguments, but got {len(args)}.")
+            return False
+        return True
+
+    # PARSE FUNCTION CALL
     def parse_function_call(self):
         """Parse a function call (I IZ)."""
         self.consume("Function Call")  # I IZ
@@ -434,6 +465,79 @@ class Parser:
         if self.current_token()[1] == "Arity Delimiter":
             self.consume("Arity Delimiter")  # MKAY
         self.consume("Linebreak")
+        # CHECK VALIDITY OF FUNCTION CALL BEFORE GOING TO FUNCTION BLOCK
+        if self.check_function_call(function_name, arguments):
+            print("this arethe arguments",arguments)
+            print("Function call successful.")
+            self.function_block(function_name, arguments)
+        else:
+            raise SyntaxError(f"Invalid function call: {function_name}({arguments})")
+
+    
+    def function_block(self, function_name, parameters):
+        # THINGS TO RESET AFTER FUNCTION BLOCK
+        temp_list_of_functions = self.list_of_functions.copy()
+        temp_symbol_table = self.symbol_table.copy()
+        temp_cursor = self.cursor
+        self.cursor = self.function_locations[function_name]
+        print("this is the cursor",self.cursor)
+        print("symbol table before",self.symbol_table)
+        GTFO_flag = False
+        """Parse the block of a function."""
+        print(f"Expecting Function Start, current token: {self.current_token()}")
+        self.consume("Function Start")  # HOW IZ I 
+        self.consume("Variable Identifier")
+
+        # Retrieve the function from the list
+        function = self.get_function_parameters(function_name)
+        if function is None:
+            raise ValueError(f"Function '{function_name}' not found.")
+        
+        # Initialize list_of_functions with function parameters
+        self.list_of_functions = {param: {"type": None, "value": None} for param in function.keys()}
+        print("this is the current list of functions",self.list_of_functions)
+        
+        # Update the function parameters with the provided values
+        for param, value in zip(function.keys(), parameters):
+            self.list_of_functions[param]["type"] = self.determine_type(value)
+            self.list_of_functions[param]["value"] = value
+        
+        # Clear the symbol table and update it with the function parameters
+        self.symbol_table.clear()
+        self.symbol_table.update({param: {"type": self.list_of_functions[param]["type"], "value": self.list_of_functions[param]["value"]} for param in self.list_of_functions})
+        
+        self.symbol_table.update({'IT': {"type": "NOOB", "value": "NOOB"}})
+        temp_symbol_table.update({'IT': {"type": "NOOB", "value": "NOOB"}})
+        print("this is the symbol table",self.symbol_table)
+
+        if self.current_token()[1] == "Construct":
+            self.consume("Construct")
+            self.consume("Variable Identifier")
+            while self.current_token()[1] == "Operator Separator":
+                self.consume("Operator Separator")
+                self.consume("Construct")
+                self.consume("Variable Identifier")
+        self.consume("Linebreak")
+        while self.current_token() and self.current_token()[1] != "Function End":
+            print("this is the current token",self.current_token())
+            if self.current_token()[1] == "Break/Return":
+                self.consume("Break/Return")
+                self.consume("Linebreak")
+                GTFO_flag = True
+                break
+            if self.current_token()[1] == "Return":
+                self.consume("Return")
+            self.parse_statement()
+            self.symbol_table['IT'] = {"type": self.determine_type(self.IT), "value": self.IT}
+            temp_symbol_table['IT'] = {"type": self.determine_type(self.IT), "value": self.IT}
+        self.consume("Function End")  # IF U SAY SO
+        if GTFO_flag:
+            temp_symbol_table.update({'IT': {"type": "NOOB", "value": "NOOB"}})
+        self.cursor = temp_cursor
+        self.list_of_functions = temp_list_of_functions
+        print("this is list of function after",self.list_of_functions)
+        self.symbol_table = temp_symbol_table
+        print("this is the symbol table after",self.symbol_table)
 
     def parse_expression(self):
         """Parse and evaluate an expression."""
