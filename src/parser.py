@@ -16,6 +16,7 @@ class Parser:
         self.declare_flag = False
         self.list_of_functions = []
         self.function_locations = {}
+        self.current_line = 0
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
         return self.lexemes[self.cursor] if self.cursor < len(self.lexemes) else None
@@ -29,6 +30,8 @@ class Parser:
             raise SyntaxError("Unexpected end of input.")
         if expected_type is None or self.current_token()[1] == expected_type:
             print(f"Consuming token: {self.current_token()[0]} with Classification: {self.current_token()[1]}")
+            if self.current_token()[1] == "Linebreak":
+                self.current_line += 1
             self.cursor += 1
             return self.current_token()
         raise SyntaxError(f"Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'.")
@@ -83,6 +86,7 @@ class Parser:
             print(f"Syntax Error: {e}")
         if self.errors:
             print(self.errors)
+            print("Error occurred at line: ", self.current_line)
             return None
         return list(zip(variables, values))
 
