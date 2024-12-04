@@ -255,7 +255,10 @@ class InterpreterApp:
         # PARSE LEXEMES
         parser = Parser(lexemes, self.update_console)
         symbol_table = parser.parse_program()
-
+        
+        if symbol_table == None:
+            print("Errors found in the program. Please check the console for more details.")
+            return
         # Fill the table with the symbol table data
         self.fill_symbol_table(symbol_table)
 
