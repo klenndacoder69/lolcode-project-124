@@ -771,7 +771,10 @@ class Parser:
         """Parse and return the value of a variable."""
         var_name = self.current_token()[0]
         if var_name not in self.symbol_table:
-            raise SyntaxError(f"Variable '{var_name}' not declared.")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Variable '{var_name}' not declared." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
         self.consume("Variable Identifier")
         return self.symbol_table[var_name]["value"]
 
