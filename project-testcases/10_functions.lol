@@ -18,18 +18,20 @@ HAI
         I HAS A name
         I HAS A num1
         I HAS A num2
+        I HAS A x
     BUHBYE
 
     GIMMEH num1
     GIMMEH num2
 
-    I IZ addNuM YR num1 AN YR num2
+    I IZ addNum YR num1 AN YR num2
     VISIBLE IT
 
     GIMMEH name
     I IZ printName YR name
     VISIBLE IT
 
+    GIMMEH x
     I IZ printNum YR SUM OF x AN 2
     VISIBLE IT
 

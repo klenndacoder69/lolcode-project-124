@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import simpledialog
 
 class Parser:
-    def __init__(self, lexemes,  output_callback=None):
+    def __init__(self, lexemes,  output_callback=None, error_callback=None):
         """
         Initialize the syntax analyzer with the lexemes.
         lexemes: List of tuples, where each tuple contains a lexeme and its classification.
@@ -13,10 +13,11 @@ class Parser:
         self.symbol_table = {}
         self.IT = None  # Special key to hold the most recent VISIBLE output
         self.output_callback = output_callback
+        self.error_callback = error_callback # HERE FOR SAVED POINT
         self.declare_flag = False
         self.list_of_functions = []
         self.function_locations = {}
-        self.current_line = 0
+        self.current_line = 1
     def current_token(self):
         """Return the current token as a tuple or None if out of bounds."""
         return self.lexemes[self.cursor] if self.cursor < len(self.lexemes) else None
@@ -34,7 +35,10 @@ class Parser:
                 self.current_line += 1
             self.cursor += 1
             return self.current_token()
-        raise SyntaxError(f"Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'.")
+        error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Expected {expected_type} got {self.current_token()[1]} at token '{self.current_token()[0]}'." # SAVE POINT
+        if self.error_callback:
+            self.error_callback(error_message)
+        raise SyntaxError(error_message)
 
     def check_for_valid_inline_comments(self):
         if self.current_token()[1] == "Single Line Comment":
@@ -58,12 +62,19 @@ class Parser:
                     self.parse_multiline_comment()
                 else:
                     self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
-                    raise SyntaxError("Error while parsing program.")
+                    error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing program." # SAVE POINT
+                    if self.error_callback:
+                        self.error_callback(error_message)
+                    raise SyntaxError(error_message)
             self.consume("Starting Program")  # HAI
             self.check_for_valid_inline_comments()
             self.consume("Linebreak")
 
             while self.current_token() and self.current_token()[1] != "Ending Program":
+                if self.errors:
+                    print(self.errors)
+                    print("Error occurred at line: ", self.current_line)
+                    return None
                 self.parse_statement()
 
             self.consume("Ending Program")  # KTHXBYE
@@ -83,11 +94,8 @@ class Parser:
             print(variables,values)
 
         except SyntaxError as e:
+            print("check if it goes here")
             print(f"Syntax Error: {e}")
-        if self.errors:
-            print(self.errors)
-            print("Error occurred at line: ", self.current_line)
-            return None
         return list(zip(variables, values))
 
     def parse_multiline_comment(self):
@@ -100,8 +108,12 @@ class Parser:
     def parse_variable_declaration_block(self):
         ''' Parse a variable declaration block. '''
         if self.declare_flag:
+            print("ARE YOU HERE")
             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-            raise SyntaxError("Error while parsing declare variables. Only one declare variables block is allowed.")
+            error_message = f"Error occurred at line {self.current_line}, Unexpected self.current_token() '{self.current_token()[0]}'.\n Syntax Error: Error while parsing declare variables. Only one declare variables block is allowed." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
         self.consume("Starting Declare Variables")
         self.consume("Linebreak")
         while self.current_token() and self.current_token()[1] != "Ending Declare Variables":
@@ -118,7 +130,10 @@ class Parser:
                 self.parse_variable_declaration()
             else:
                 self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-                raise SyntaxError("Error while parsing declare variables. Only variable declarations are allowed.")
+                error_message = f"Error occurred at line {self.current_line}, Unexpected self.current_token() '{self.current_token()[0]}'.\n Syntax Error: Error while parsing declare variables." # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise SyntaxError(error_message) # SAVE POINT
         self.consume("Ending Declare Variables")
         self.consume("Linebreak")
         self.declare_flag = True
@@ -177,7 +192,11 @@ class Parser:
 
         else:
             self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
-            raise SyntaxError("Error while parsing statement.")
+            error_message = f"Error occurred at line {self.current_line}, Unexpected self.current_token() '{self.current_token()[0]}'.\n Syntax Error: Error while parsing statement." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
+
     def parse_variable_declaration(self):
         """Parse a variable declaration."""
         self.consume("Variable Declaration")  # I HAS A
@@ -202,7 +221,10 @@ class Parser:
         """Parse a variable assignment."""
         variable_name = self.current_token()[0]
         if variable_name not in self.symbol_table:
-            raise SyntaxError(f"Variable '{variable_name}' not declared.")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Variable '{variable_name}' not declared." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
         self.consume("Variable Identifier")
         if self.current_token()[1] == "Variable Assignment":  # R
             print("tite")
@@ -234,7 +256,10 @@ class Parser:
             self.consume("Typecasting")  # IS NOW A
             new_type = self.current_token()[0]
             if new_type not in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
-                raise SyntaxError(f"Invalid type identifier: {new_type}")
+                error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Invalid type identifier: {new_type}" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise SyntaxError(error_message)
             self.consume("Type Identifier")
             self.symbol_table[variable_name]["type"] = new_type
             self.symbol_table[variable_name]["value"] = self.cast_value(self.symbol_table[variable_name]["value"], new_type)
@@ -259,6 +284,11 @@ class Parser:
                 output.append(self.current_token()[0])
                 self.consume("Literal")
             elif self.current_token()[1] == "Variable Identifier":
+                if self.current_token()[0] not in self.symbol_table:
+                    error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Variable '{self.current_token()[0]}' not declared." # SAVE POINT
+                    if self.error_callback:
+                        self.error_callback(error_message)
+                    raise SyntaxError(error_message) # SAVE POINT
                 print("this is the current token",self.current_token()[0])
                 output.append(self.symbol_table[self.current_token()[0]]["value"])
                 self.consume("Variable Identifier")
@@ -283,7 +313,10 @@ class Parser:
         self.consume("Input Keyword")  # GIMMEH
         variable_name = self.current_token()[0]
         if variable_name not in self.symbol_table:
-            raise SyntaxError(f"Variable '{variable_name}' not declared.")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Variable '{variable_name}' not declared." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
         self.consume("Variable Identifier")
 
         # Create a popup to get the input value
@@ -312,7 +345,10 @@ class Parser:
         self.consume("Typecasting")  # MAEK
         variable_name = self.current_token()[0]
         if variable_name not in self.symbol_table:
-            raise SyntaxError(f"Variable '{variable_name}' not declared.")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Variable '{variable_name}' not declared." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
         self.consume("Variable Identifier")
         new_type = self.current_token()[0]
         self.consume("Type Identifier")  # e.g., NUMBR, YARN
@@ -475,7 +511,10 @@ class Parser:
             print("Function call successful.")
             self.function_block(function_name, arguments)
         else:
-            raise SyntaxError(f"Invalid function call: {function_name}({arguments})")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Invalid function call: {function_name}({arguments})" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
 
     
     def function_block(self, function_name, parameters):
@@ -495,7 +534,10 @@ class Parser:
         # Retrieve the function from the list
         function = self.get_function_parameters(function_name)
         if function is None:
-            raise ValueError(f"Function '{function_name}' not found.")
+            error_message = f"Error occurred at line {self.current_line}.\n Value Error: Function '{function_name}' not found." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise ValueError(error_message)
         
         # Initialize list_of_functions with function parameters
         self.list_of_functions = {param: {"type": None, "value": None} for param in function.keys()}
@@ -556,7 +598,10 @@ class Parser:
         elif self.current_token()[1] in ["Literal", "String Delimiter", "Variable Identifier"]:
             return self.parse_literal_or_variable()
         else:
-            raise SyntaxError(f"Unexpected token: {self.current_token()[0]}")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Unexpected token: {self.current_token()[0]}" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
 
     def parse_arithmetic(self):
         """Handle complex arithmetic operations, including nested expressions."""
@@ -615,7 +660,10 @@ class Parser:
                 return "WIN"
             return "FAIL"
         else:
-            raise SyntaxError(f"Unexpected boolean operator: {operator}")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Unexpected boolean operator: {operator}" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
 
     def parse_literal_or_variable(self):
         """Parse a literal or variable."""
@@ -626,7 +674,10 @@ class Parser:
         elif self.current_token()[1] == "Variable Identifier":
             return self.parse_variable()
         else:
-            raise SyntaxError(f"Unexpected token: {self.current_token()[0]}")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Unexpected token: {self.current_token()[0]}" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
 
     def parse_literal(self):
         """Parse a literal which can be either a string or a number."""
@@ -648,7 +699,10 @@ class Parser:
                 return literal_value
         else:
             self.errors.append(f"Unexpected literal at token '{self.current_token()[0]}'.")
-            raise SyntaxError(f"Unexpected literal at token '{self.current_token()[0]}'.")
+            error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Unexpected literal at token '{self.current_token()[0]}'." # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise SyntaxError(error_message)
 
     def perform_arithmetic(self, left, right, operator):
         """Perform arithmetic based on the operator."""
@@ -662,13 +716,19 @@ class Parser:
             try:
                 left = float(left) if '.' in left else int(left)
             except ValueError:
-                raise TypeError(f"Invalid operand type for arithmetic: {left}")
+                error_message = f"Error occurred at line {self.current_line}.\n Type Error: Invalid operand type for arithmetic: {left}" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise TypeError(error_message)
         if isinstance(right, str):
             print("inside here")
             try:
                 right = float(right) if '.' in right else int(right)
             except ValueError:
-                raise TypeError(f"Invalid operand type for arithmetic: {right}")
+                error_message = f"Error occurred at line {self.current_line}.\n Type Error: Invalid operand type for arithmetic: {right}" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise TypeError(error_message)
 
         if operator == "SUM OF":
             return left + right
@@ -685,7 +745,10 @@ class Parser:
         elif operator == "SMALLR OF":
             return min(left, right)
         else:
-            raise ValueError(f"Unknown operator: {operator}")
+            error_message = f"Error occurred at line {self.current_line}.\n Value Error: Unknown operator: {operator}" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise ValueError(error_message)
 
     def parse_comparison(self):
         """Parse comparison operations and set a flag if the right side is nested."""
@@ -699,7 +762,10 @@ class Parser:
         elif operator == "DIFFRINT":
             return "WIN" if left != right else "FAIL"
     
-        raise SyntaxError(f"Unexpected comparison operator: {operator}")
+        error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Unexpected comparison operator: {operator}" # SAVE POINT
+        if self.error_callback:
+            self.error_callback(error_message)
+        raise SyntaxError(error_message)
 
     def parse_variable(self):
         """Parse and return the value of a variable."""
@@ -749,7 +815,10 @@ class Parser:
                 self.consume("Break/Return")
                 self.consume("Linebreak")
             else:
-                raise SyntaxError("Error while parsing case statement. Expected 'OMG'.")
+                error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing case statement. Expected 'OMG'." # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise SyntaxError(error_message)
                 
     def determine_type(self, value):
         """Determine the LOLCode type of a value."""
@@ -772,12 +841,18 @@ class Parser:
             try:
                 return int(value)
             except ValueError:
-                raise SyntaxError(f"Cannot cast value '{value}' to NUMBR")
+                error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Cannot cast value '{value}' to NUMBR" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise SyntaxError(error_message)
         elif target_type == "NUMBAR":
             try:
                 return float(value)
             except ValueError:
-                raise SyntaxError(f"Cannot cast value '{value}' to NUMBAR")
+                error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Cannot cast value '{value}' to NUMBAR" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise SyntaxError(error_message)
         elif target_type == "YARN":
             return str(value)
         elif target_type == "TROOF":
@@ -797,7 +872,10 @@ class Parser:
         elif target_type == "NOOB":
             return None
         else:
-            raise ValueError(f"Invalid type casting to {target_type}")
+            error_message = f"Error occurred at line {self.current_line}.\n Value Error: Invalid type casting to {target_type}" # SAVE POINT
+            if self.error_callback:
+                self.error_callback(error_message)
+            raise ValueError(error_message)
 
     def cast_to_number(self, value):
         """Cast a value to a number (int or float)."""
@@ -811,7 +889,10 @@ class Parser:
             try:
                 return float(value)
             except ValueError:
-                raise TypeError(f"Cannot cast value to number: {value}")
+                error_message = f"Error occurred at line {self.current_line}.\n Type Error: Cannot cast value to number: {value}" # SAVE POINT
+                if self.error_callback:
+                    self.error_callback(error_message)
+                raise TypeError(error_message)
 
     def parse_smoosh(self):
         """Parse and execute a SMOOSH statement."""
