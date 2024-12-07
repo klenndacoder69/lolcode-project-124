@@ -253,7 +253,7 @@ class InterpreterApp:
         self.fill_table(lexemes)
 
         # PARSE LEXEMES
-        parser = Parser(lexemes, self.update_console)
+        parser = Parser(lexemes, self.update_console, self.display_error)
         symbol_table = parser.parse_program()
         
         if symbol_table == None:
@@ -269,6 +269,8 @@ class InterpreterApp:
         
         # ASSIGN NEW DATA
         for item in lexemes:
+            if item[1] == "Linebreak":
+                continue
             self.list_tokens_table.insert("", "end", values=(item[0], item[1]))
     
     def fill_symbol_table(self,symbol_table):
@@ -281,6 +283,12 @@ class InterpreterApp:
             self.symbol_table.insert("", "end", values=(item[0],item[1]))
     
     def update_console(self, message):
+        self.console.config(state=tk.NORMAL)
+        self.console.insert(tk.END, message + "\n")
+        self.console.config(state=tk.DISABLED)
+        self.console.see(tk.END)
+    
+    def display_error(self, message):
         self.console.config(state=tk.NORMAL)
         self.console.insert(tk.END, message + "\n")
         self.console.config(state=tk.DISABLED)
