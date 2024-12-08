@@ -62,7 +62,7 @@ class Parser:
                     self.parse_multiline_comment()
                 else:
                     self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
-                    error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing program." # SAVE POINT
+                    error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing program. Comments are only allowed before the start of the program." # SAVE POINT
                     if self.error_callback:
                         self.error_callback(error_message)
                     raise SyntaxError(error_message)
@@ -78,7 +78,20 @@ class Parser:
                 self.parse_statement()
 
             self.consume("Ending Program")  # KTHXBYE
-
+            if self.current_token() is not None: # here we address comments made after the end of the program (no other tokens are allowed except for comments)
+                while self.current_token() is not None:
+                    if self.current_token()[1] == "Linebreak":
+                        self.consume("Linebreak")
+                    elif self.current_token()[1] == "Single Line Comment":
+                        self.consume("Single Line Comment")
+                    elif self.current_token()[1] == "Starting Multiple Line Comment":
+                        self.parse_multiline_comment()
+                    else:
+                        self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
+                        error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing program. Comments are only allowed at the end of the program" # SAVE POINT
+                        if self.error_callback:
+                            self.error_callback(error_message)
+                        raise SyntaxError(error_message)
             print("Program is syntactically correct.")
             print("Final Symbol Table:")
             for var, attributes in self.symbol_table.items():
