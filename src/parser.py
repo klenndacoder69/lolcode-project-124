@@ -60,6 +60,8 @@ class Parser:
                     self.consume("Single Line Comment")
                 elif self.current_token()[1] == "Starting Multiple Line Comment":
                     self.parse_multiline_comment()
+                elif self.current_token()[1] == "Function Start":
+                    self.parse_function()
                 else:
                     self.errors.append(f"Unexpected token '{self.current_token()[0]}'.")
                     error_message = f"Error occurred at line {self.current_line}.\n Syntax Error: Error while parsing program. Comments are only allowed before the start of the program." # SAVE POINT
@@ -141,6 +143,7 @@ class Parser:
                 self.consume("Linebreak")
             elif self.current_token()[1] == "Variable Declaration":
                 self.parse_variable_declaration()
+            
             else:
                 self.errors.append(f"Unexpected self.current_token() '{self.current_token()[0]}'.")
                 error_message = f"Error occurred at line {self.current_line}, Unexpected self.current_token() '{self.current_token()[0]}'.\n Syntax Error: Error while parsing declare variables." # SAVE POINT
